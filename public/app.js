@@ -1,7 +1,7 @@
 let books = JSON.parse(localStorage.getItem('tb_books')) || [];
 let editingIndex = null;
 let currentOverviewTab = 'authors';
-let currentCoverBase64 = ''; // Memorizza l'immagine caricata
+let currentCoverBase64 = ''; // Memorizza la miniatura dell'immagine caricata
 
 document.addEventListener('DOMContentLoaded', () => {
   renderHome();
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDatalists();
 });
 
-// Registrazione Service Worker Offline
+// Registrazione del Service Worker per supporto Offline
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
@@ -54,13 +54,12 @@ function toggleForm() {
   }
 }
 
-// Gestione anteprima e compressione miniatura da file locale del telefono
+// Gestione anteprima e compressione miniatura dalla galleria foto del telefono
 function previewThumbnail(event) {
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      // Ridimensioniamo l'immagine tramite canvas per ottimizzare lo spazio in memoria/JSON
       const img = new Image();
       img.src = e.target.result;
       img.onload = function() {
@@ -90,7 +89,7 @@ function previewThumbnail(event) {
   }
 }
 
-// Salvataggio Libro
+// Gestione Salvataggio Libro
 document.getElementById('book-form').addEventListener('submit', (e) => {
   e.preventDefault();
   
@@ -160,7 +159,7 @@ function renderHome() {
   container.innerHTML = sortedBooks.map(b => renderBookCardHTML(b)).join('');
 }
 
-// Rendering Anni
+// Rendering Anni nella sezione Libri
 function renderYearsCards() {
   const container = document.getElementById('years-cards-container');
   const yearsMap = {};
@@ -206,7 +205,7 @@ function closeYearDetails() {
   document.getElementById('years-cards-container').classList.remove('hidden');
 }
 
-// Panoramica
+// Panoramica (Autori, Serie, Formati)
 function switchOverviewTab(type) {
   currentOverviewTab = type;
 
@@ -269,7 +268,7 @@ function closeOverviewDetail() {
   document.getElementById('overview-grid').classList.remove('hidden');
 }
 
-// Scheda Libro
+// Scheda Libro HTML
 function renderBookCardHTML(b, showActions = false) {
   const index = books.findIndex(item => item.id === b.id);
   
@@ -365,7 +364,7 @@ async function exportData(type) {
   a.click();
 }
 
-// Backup JSON Corretto per salvataggio su telefono
+// Backup JSON nativo
 function backupJSON() {
   const dataStr = JSON.stringify(books, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
@@ -399,12 +398,23 @@ function restoreJSON(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
+// Cancellazione Totale Istantanea da tutte le sezioni
 function clearAllData() {
   if(confirm('Attenzione: questa azione eliminerà tutti i libri salvati. Vuoi procedere?')) {
     books = [];
     saveToStorage();
+    
+    // Svuota immediatamente Home e Scaffale Anni
     renderHome();
     renderYearsCards();
+    
+    // Chiude eventuali viste di dettaglio aperte
+    closeYearDetails();
+    closeOverviewDetail();
+    
+    // Aggiorna la vista Panoramica
+    switchOverviewTab(currentOverviewTab);
+    
     alert('Tutti i dati sono stati cancellati.');
   }
 }
