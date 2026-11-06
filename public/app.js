@@ -8,6 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDatalists();
 });
 
+// Registrazione del Service Worker per supporto Offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('Service Worker registrato con successo:', reg.scope))
+      .catch(err => console.log('Registrazione Service Worker fallita:', err));
+  });
+}
+
 function saveToStorage() {
   localStorage.setItem('tb_books', JSON.stringify(books));
   updateDatalists();
@@ -41,10 +50,24 @@ function toggleForm() {
     form.reset();
     editingIndex = null;
     document.getElementById('form-title').innerText = "Nuovo Libro";
+    document.getElementById('cover-preview-container').classList.add('hidden');
   }
 }
 
-// Gestione Salvataggio Libro
+// Anteprima miniatura immagine
+function previewThumbnail(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('cover-preview').src = e.target.result;
+      document.getElementById('cover-preview-container').classList.remove('hidden');
+    }
+    reader.readAsDataURL(file);
+  }
+}
+
+// Gestione Salvataggio Libro con conversione base64 sicura
 document.getElementById('book-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -52,15 +75,10 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
   let coverUrl = document.getElementById('inp-cover-url').value;
 
   if (fileInput.files.length > 0) {
-    const formData = new FormData();
-    formData.append('cover', fileInput.files[0]);
-    try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if(data.url) coverUrl = data.url;
-    } catch(err) {
-      console.log("Upload in fallback locale");
-    }
+    const file = fileInput.files[0];
+    coverUrl = await toBase64(file);
+  } else if (!coverUrl && editingIndex !== null) {
+    coverUrl = books[editingIndex].copertina;
   }
 
   const bookData = {
@@ -73,7 +91,7 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
     edizione: document.getElementById('inp-edition').value,
     formato: document.getElementById('inp-format').value,
     dataFine: document.getElementById('inp-date-end').value,
-    copertina: coverUrl || 'https://via.placeholder.com/70x105?text=Libro'
+    copertina: coverUrl || 'https://via.placeholder.com/65x95?text=Libro'
   };
 
   if(editingIndex !== null) {
@@ -88,7 +106,16 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
   renderYearsCards();
 });
 
-// Rendering HOME con statistiche calde e pagine visibili
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
+
+// Rendering HOME
 function renderHome() {
   const currentYear = new Date().getFullYear().toString();
   
@@ -110,13 +137,11 @@ function renderHome() {
     }
   });
 
-  // Totale Globale
   document.getElementById('stat-total-books').innerHTML = `${books.length} <span class="unit">libri</span>`;
-  document.getElementById('stat-total-pages').innerText = `${totalPages.toLocaleString()} pagine totali`;
+  document.getElementById('stat-total-pages').innerText = `${totalPages.toLocaleString()} pagine lette`;
   document.getElementById('stat-total-cartaceo').innerText = `📖 ${totalCartaceo} cartacei`;
   document.getElementById('stat-total-ebook').innerText = `📱 ${totalEbook} ebook`;
 
-  // Anno Corrente
   document.getElementById('stat-year-books').innerHTML = `${yearBooks} <span class="unit">libri</span>`;
   document.getElementById('stat-year-pages').innerText = `${yearPages.toLocaleString()} pagine quest'anno`;
   document.getElementById('stat-year-cartaceo').innerText = `📖 ${yearCartaceo} cartacei`;
@@ -126,15 +151,16 @@ function renderHome() {
   container.innerHTML = sortedBooks.map(b => renderBookCardHTML(b)).join('');
 }
 
-// Rendering Anni nella sezione Libri
+// Rendering Anni con numero libri, pagine totali e formati
 function renderYearsCards() {
   const container = document.getElementById('years-cards-container');
   const yearsMap = {};
 
   books.forEach(b => {
     const y = b.dataFine ? b.dataFine.split('-')[0] : 'Senza Data';
-    if(!yearsMap[y]) yearsMap[y] = { cartaceo: 0, ebook: 0, count: 0 };
+    if(!yearsMap[y]) yearsMap[y] = { cartaceo: 0, ebook: 0, count: 0, pages: 0 };
     yearsMap[y].count++;
+    yearsMap[y].pages += (b.pagine || 0);
     if(b.formato === 'Cartaceo') yearsMap[y].cartaceo++;
     if(b.formato === 'Ebook') yearsMap[y].ebook++;
   });
@@ -143,7 +169,7 @@ function renderYearsCards() {
   container.innerHTML = years.map(y => `
     <div class="shelf-tile" onclick="openYearDetails('${y}')">
       <div class="tile-title">${y}</div>
-      <div class="tile-count">${yearsMap[y].count} letture</div>
+      <div class="tile-count">${yearsMap[y].count} libri (${yearsMap[y].pages.toLocaleString()} pag.)</div>
       <div class="stat-breakdown-row" style="margin-top:12px; font-size:14px;">
         <span>📖 ${yearsMap[y].cartaceo}</span>
         <span>•</span>
@@ -171,7 +197,7 @@ function closeYearDetails() {
   document.getElementById('years-cards-container').classList.remove('hidden');
 }
 
-// Panoramica App-Style
+// Panoramica con Autori in ordine alfabetico (Nome su, Cognome giù) e Formati distinti
 function switchOverviewTab(type) {
   currentOverviewTab = type;
 
@@ -188,13 +214,18 @@ function switchOverviewTab(type) {
     let key = 'Non specificato';
     if(type === 'authors') key = b.autore || 'Senza Autore';
     if(type === 'series') key = b.serie || 'Senza Serie/Argomento';
-    if(type === 'formats') key = b.formato || 'Altro';
+    if(type === 'formats') {
+      if(b.formato === 'Cartaceo') key = '📖 Cartaceo';
+      else if(b.formato === 'Ebook') key = '📱 Ebook';
+      else key = b.formato || 'Altro';
+    }
 
     if(!groups[key]) groups[key] = [];
     groups[key].push(b);
   });
 
-  const keys = Object.keys(groups).sort((a,b) => a.localeCompare(b));
+  let keys = Object.keys(groups);
+  keys.sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
 
   grid.innerHTML = keys.map(k => `
     <div class="shelf-tile" onclick="openOverviewDetail('${type}', '${encodeURIComponent(k)}')">
@@ -215,7 +246,10 @@ function openOverviewDetail(type, encodedKey) {
   const filtered = books.filter(b => {
     if(type === 'authors') return (b.autore || 'Senza Autore') === key;
     if(type === 'series') return (b.serie || 'Senza Serie/Argomento') === key;
-    if(type === 'formats') return (b.formato || 'Altro') === key;
+    if(type === 'formats') {
+      const fmtKey = b.formato === 'Cartaceo' ? '📖 Cartaceo' : (b.formato === 'Ebook' ? '📱 Ebook' : b.formato);
+      return fmtKey === key;
+    }
   }).sort((a,b) => new Date(a.dataFine) - new Date(b.dataFine));
 
   document.getElementById('overview-detail-list').innerHTML = filtered.map(b => renderBookCardHTML(b, true)).join('');
@@ -226,18 +260,28 @@ function closeOverviewDetail() {
   document.getElementById('overview-grid').classList.remove('hidden');
 }
 
-// Card Libro Unificata
+// Scheda libro con ordine dei campi e data formattata Giorno Mese Anno
 function renderBookCardHTML(b, showActions = false) {
   const index = books.findIndex(item => item.id === b.id);
+  
+  let formattedDate = 'N/D';
+  if(b.dataFine) {
+    const dateObj = new Date(b.dataFine);
+    if(!isNaN(dateObj)) {
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      formattedDate = dateObj.toLocaleDateString('it-IT', options);
+    }
+  }
+
   return `
     <div class="book-card">
       <img src="${b.copertina}" class="book-cover" alt="copertina">
       <div class="book-info">
         <h4>${b.titolo}</h4>
         <p><strong>Autore:</strong> ${b.autore}</p>
-        <p><strong>Formato:</strong> ${b.formato} • ${b.pagine} pag.</p>
-        ${b.serie ? `<p><strong>Serie:</strong> ${b.serie}</p>` : ''}
-        <p><strong>Terminato:</strong> ${b.dataFine || 'N/D'}</p>
+        <p><strong>Anno:</strong> ${b.anno || 'N/D'} &nbsp;|&nbsp; <strong>Serie:</strong> ${b.serie || '-'}</p>
+        <p><strong>Pagine:</strong> ${b.pagine} &nbsp;|&nbsp; <strong>Formato:</strong> ${b.formato}</p>
+        <p><strong>Terminato il:</strong> ${formattedDate}</p>
         ${showActions ? `
           <div class="action-buttons">
             <button class="action-btn btn-edit" onclick="editBook(${index})">Modifica</button>
@@ -290,7 +334,7 @@ function updateDatalists() {
   document.getElementById('list-series').innerHTML = series.map(s => `<option value="${s}">`).join('');
 }
 
-// Backup & Export
+// Export CSV e Backup JSON
 async function exportData(type) {
   const res = await fetch(`/api/export/${type}`, {
     method: 'POST',
@@ -321,6 +365,7 @@ function restoreJSON(event) {
       saveToStorage();
       alert('Ripristino completato con successo!');
       renderHome();
+      renderYearsCards();
     } catch(err) {
       alert('File di backup non valido!');
     }

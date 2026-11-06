@@ -16,7 +16,6 @@
 body {
   margin: 0;
   padding: 0;
-  /* Applicazione Garamond come richiesto */
   font-family: 'EB Garamond', Garamond, Georgia, serif;
   background-color: var(--bg-parchment);
   color: var(--text-main);
@@ -26,7 +25,6 @@ body {
   line-height: 1.5;
 }
 
-/* Header con Banner ed Effetto Caldo */
 .app-header {
   position: sticky;
   top: 0;
@@ -44,9 +42,7 @@ body {
   gap: 12px;
 }
 
-.header-icon {
-  font-size: 26px;
-}
+.header-icon { font-size: 26px; }
 
 .app-header h1 {
   margin: 0;
@@ -75,13 +71,11 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 3D Cards & Effetti Arrotondati */
 .3d-card {
   background: var(--card-bg);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-3d);
   border: 1px solid rgba(232, 225, 213, 0.8);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stats-grid {
@@ -94,19 +88,8 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
 }
 
-.stat-card {
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-header-flex {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
+.stat-card { padding: 22px; display: flex; flex-direction: column; }
+.stat-header-flex { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .card-icon-symbol { font-size: 20px; }
 
 .stat-category-title {
@@ -117,7 +100,6 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   font-weight: 600;
 }
 
-/* Niente grassetto pesante, numeri eleganti in Garamond */
 .stat-main-value {
   font-size: 38px;
   font-weight: 600;
@@ -126,13 +108,8 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   margin-bottom: 4px;
 }
 
-.stat-main-value .unit {
-  font-size: 20px;
-  color: var(--text-muted);
-  font-weight: 400;
-}
+.stat-main-value .unit { font-size: 20px; color: var(--text-muted); font-weight: 400; }
 
-/* Numero pagine super visibile */
 .stat-pages-highlight {
   font-size: 20px;
   font-weight: 600;
@@ -153,7 +130,6 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
 
 .dot-separator { color: var(--accent-gold); }
 
-/* Card Libro Stile 3D */
 .book-card {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
@@ -164,16 +140,13 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   box-shadow: var(--shadow-3d);
   border: 1px solid rgba(232, 225, 213, 0.8);
   align-items: center;
-  transition: transform 0.15s ease;
 }
 
-.book-card:active { transform: scale(0.98); }
-
 .book-cover {
-  width: 70px;
-  height: 105px;
+  width: 65px;
+  height: 95px;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #EAE3D9;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
@@ -187,12 +160,7 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   color: var(--text-main);
 }
 
-.book-info p {
-  margin: 3px 0;
-  font-size: 16px;
-  color: var(--text-muted);
-}
-
+.book-info p { margin: 3px 0; font-size: 16px; color: var(--text-muted); }
 .book-info strong { color: var(--text-main); font-weight: 600; }
 
 .action-buttons {
@@ -207,7 +175,6 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
 .btn-edit { color: var(--accent-gold); }
 .btn-delete { color: #A83838; }
 
-/* Scaffale Anni e Panoramica App-Style */
 .years-scroller-grid, .overview-app-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -227,7 +194,6 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.shelf-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .shelf-tile:active { transform: scale(0.97); }
 
 .tile-title {
@@ -251,7 +217,6 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   color: var(--text-main);
 }
 
-/* Bottoni 3D Caldi */
 .btn-primary, .btn-save {
   width: 100%;
   background: linear-gradient(135deg, #B55C3F 0%, #984325 100%);
@@ -264,13 +229,9 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   font-family: inherit;
   box-shadow: 0 8px 20px rgba(152, 67, 37, 0.25);
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
   margin-bottom: 16px;
 }
 
-.btn-primary:active, .btn-save:active { transform: scale(0.98); }
-
-/* Form 3D Super Arrotondato */
 .3d-form {
   background: #FFFFFF;
   padding: 24px;
@@ -292,8 +253,7 @@ main { padding: 20px; max-width: 700px; margin: 0 auto; }
   background: var(--bg-parchment);
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 32px; height: 32px;
   font-weight: bold;
   font-size: 16px;
   color: var(--text-muted);
@@ -322,18 +282,11 @@ input[type="text"], input[type="number"], input[type="date"], input[type="url"],
   background: #FAF8F5;
   color: var(--text-main);
   margin-bottom: 12px;
-  transition: border-color 0.2s;
 }
 
-input:focus {
-  outline: none;
-  border-color: var(--accent-terracotta);
-  background: #FFFFFF;
-}
-
+input:focus { outline: none; border-color: var(--accent-terracotta); background: #FFFFFF; }
 .input-row { display: flex; gap: 12px; }
 
-/* Segmented Control a Pillola 3D */
 .pill-segmented-control {
   display: flex;
   background: #EFEAEE;
@@ -363,42 +316,11 @@ input:focus {
 }
 
 .form-actions-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-.btn-cancel {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  padding: 10px;
-  font-size: 16px;
-  font-family: inherit;
-  cursor: pointer;
-}
+.btn-cancel { background: transparent; border: none; color: var(--text-muted); padding: 10px; font-size: 16px; font-family: inherit; cursor: pointer; }
+.btn-back-link { background: transparent; border: none; color: var(--accent-terracotta); font-size: 18px; font-weight: 600; font-family: inherit; padding: 0; margin-bottom: 14px; cursor: pointer; }
 
-.btn-back-link {
-  background: transparent;
-  border: none;
-  color: var(--accent-terracotta);
-  font-size: 18px;
-  font-weight: 600;
-  font-family: inherit;
-  padding: 0;
-  margin-bottom: 14px;
-  cursor: pointer;
-}
-
-/* Settings & Azioni */
-.settings-card {
-  padding: 20px;
-  margin-bottom: 16px;
-}
-
-.settings-card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 14px;
-}
+.settings-card { padding: 20px; margin-bottom: 16px; }
+.settings-card-title { font-size: 15px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
 
 .btn-warm {
   width: 100%;
@@ -415,12 +337,8 @@ input:focus {
   box-sizing: border-box;
   display: block;
   cursor: pointer;
-  transition: background 0.2s;
 }
 
-.btn-warm:active { background: #F3EEEA; }
-
-.danger-card { border-color: #F0CCCC; }
 .btn-danger-warm {
   width: 100%;
   background: #FDF2F2;
@@ -436,7 +354,6 @@ input:focus {
 
 .btn-file-label { cursor: pointer; display: block; }
 
-/* Tab Bar Inferiore Stile Libreria Apple */
 .tab-bar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
@@ -452,18 +369,7 @@ input:focus {
   z-index: 100;
 }
 
-.tab-item {
-  background: none;
-  border: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: var(--text-muted);
-  font-family: inherit;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
+.tab-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-family: inherit; cursor: pointer; }
 .tab-item.active { color: var(--accent-terracotta); font-weight: 600; }
 .tab-item .icon { font-size: 24px; }
 .tab-item .label { font-size: 11px; margin-top: 2px; }

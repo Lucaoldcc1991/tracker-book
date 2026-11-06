@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Tracker Book</title>
-  <!-- Google Fonts: EB Garamond per un look letterario ed elegante -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
@@ -30,7 +29,6 @@
       <div class="section-title-badge">Situazione Letture</div>
       
       <div class="stats-grid">
-        <!-- Statistica Totale Globale -->
         <div class="stat-card 3d-card">
           <div class="stat-header-flex">
             <span class="card-icon-symbol">📚</span>
@@ -45,7 +43,6 @@
           </div>
         </div>
 
-        <!-- Statistica Anno Corrente -->
         <div class="stat-card 3d-card">
           <div class="stat-header-flex">
             <span class="card-icon-symbol">⏳</span>
@@ -69,7 +66,6 @@
     <section id="sec-libri" class="tab-content">
       <button class="btn-primary 3d-btn" onclick="toggleForm()">+ Aggiungi Nuovo Libro</button>
 
-      <!-- Form 3D Arrotondato -->
       <form id="book-form" class="hidden 3d-form">
         <div class="form-top-bar">
           <h3 id="form-title">Nuovo Libro</h3>
@@ -79,14 +75,17 @@
         <div class="input-group">
           <label>Copertina (Scatta foto o URL)</label>
           <div class="file-input-wrapper">
-            <input type="file" id="inp-cover" accept="image/*" capture="environment">
+            <input type="file" id="inp-cover" accept="image/*" capture="environment" onchange="previewThumbnail(event)">
             <input type="url" id="inp-cover-url" placeholder="Incolla URL copertina da Google">
+          </div>
+          <div id="cover-preview-container" class="hidden" style="margin-top:10px;">
+            <img id="cover-preview" class="book-cover" style="width:50px; height:75px;" alt="Anteprima">
           </div>
         </div>
 
         <div class="input-group">
           <input type="text" id="inp-title" placeholder="Titolo del libro *" required>
-          <input type="text" id="inp-author" placeholder="Autore *" list="list-authors" required>
+          <input type="text" id="inp-author" placeholder="Autore (Nome Cognome) *" list="list-authors" required>
           <datalist id="list-authors"></datalist>
 
           <div class="input-row">
@@ -138,10 +137,8 @@
         <button id="btn-ov-formats" class="pill-segment" onclick="switchOverviewTab('formats')">Formato</button>
       </div>
 
-      <!-- Griglia App-Style raffinata -->
       <div id="overview-grid" class="overview-app-grid"></div>
 
-      <!-- Dettaglio Elemento Panoramica -->
       <div id="overview-detail" class="hidden">
         <button class="btn-back-link" onclick="closeOverviewDetail()">‹ Torna alla panoramica</button>
         <h2 id="overview-detail-title" class="shelf-title"></h2>
@@ -153,27 +150,25 @@
     <section id="sec-settings" class="tab-content">
       <div class="settings-card 3d-card">
         <div class="settings-card-title">Esportazione Dati</div>
-        <button class="btn-warm" onclick="exportData('csv')">📄 Esporta Tabella CSV</button>
-        <button class="btn-warm" onclick="exportData('pdf')">📕 Esporta Riepilogo PDF</button>
+        <button class="btn-warm" onclick="exportData('csv')">📊 Esporta Excel (CSV)</button>
       </div>
 
       <div class="settings-card 3d-card">
-        <div class="settings-card-title">Backup e Ripristino</div>
-        <button class="btn-warm" onclick="backupJSON()">💾 Scarica Backup JSON</button>
+        <div class="settings-card-title">Backup e Ripristino Dati</div>
+        <button class="btn-warm" onclick="backupJSON()">💾 Scarica Backup (JSON)</button>
         <label class="btn-warm btn-file-label">
-          📥 Ripristina da Backup JSON
+          📥 Ripristina Backup (JSON)
           <input type="file" id="inp-restore" accept=".json" onchange="restoreJSON(event)" style="display:none;">
         </label>
       </div>
 
-      <div class="settings-card 3d-card danger-card">
-        <div class="settings-card-title" style="color: #9C3A3A;">Zona Pericolo</div>
+      <div class="settings-card 3d-card">
+        <div class="settings-card-title" style="color: #A83838;">Gestione Libreria</div>
         <button class="btn-danger-warm" onclick="clearAllData()">🗑️ Cancella tutti i dati</button>
       </div>
     </section>
   </main>
 
-  <!-- Tab Bar Inferiore Stile iOS Libreria -->
   <nav class="tab-bar">
     <button class="tab-item active" onclick="switchTab('home', 'Home', '📖', this)">
       <span class="icon">🏠</span>
@@ -183,8 +178,8 @@
       <span class="icon">📚</span>
       <span class="label">Libri</span>
     </button>
-    <button class="tab-item" onclick="switchTab('panoramica', 'Panoramica', '☕', this)">
-      <span class="icon">☕</span>
+    <button class="tab-item" onclick="switchTab('panoramica', 'Panoramica', '📚', this)">
+      <span class="icon">📚</span>
       <span class="label">Panoramica</span>
     </button>
     <button class="tab-item" onclick="switchTab('settings', 'Impostazioni', '⚙️', this)">
