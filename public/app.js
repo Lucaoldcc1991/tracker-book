@@ -1,6 +1,7 @@
 let books = JSON.parse(localStorage.getItem('tb_books')) || [];
 let editingIndex = null;
 let currentOverviewTab = 'authors';
+let currentCoverBase64 = ''; // Memorizza l'immagine caricata
 
 document.addEventListener('DOMContentLoaded', () => {
   renderHome();
@@ -8,12 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDatalists();
 });
 
-// Registrazione del Service Worker per supporto Offline
+// Registrazione Service Worker Offline
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('Service Worker registrato con successo:', reg.scope))
-      .catch(err => console.log('Registrazione Service Worker fallita:', err));
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
   });
 }
 
@@ -49,36 +48,55 @@ function toggleForm() {
   if(form.classList.contains('hidden')) {
     form.reset();
     editingIndex = null;
+    currentCoverBase64 = '';
     document.getElementById('form-title').innerText = "Nuovo Libro";
     document.getElementById('cover-preview-container').classList.add('hidden');
   }
 }
 
-// Anteprima miniatura immagine
+// Gestione anteprima e compressione miniatura da file locale del telefono
 function previewThumbnail(event) {
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      document.getElementById('cover-preview').src = e.target.result;
-      document.getElementById('cover-preview-container').classList.remove('hidden');
+      // Ridimensioniamo l'immagine tramite canvas per ottimizzare lo spazio in memoria/JSON
+      const img = new Image();
+      img.src = e.target.result;
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 450;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        currentCoverBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById('cover-preview').src = currentCoverBase64;
+        document.getElementById('cover-preview-container').classList.remove('hidden');
+      }
     }
     reader.readAsDataURL(file);
   }
 }
 
-// Gestione Salvataggio Libro con conversione base64 sicura
-document.getElementById('book-form').addEventListener('submit', async (e) => {
+// Salvataggio Libro
+document.getElementById('book-form').addEventListener('submit', (e) => {
   e.preventDefault();
   
-  const fileInput = document.getElementById('inp-cover');
-  let coverUrl = document.getElementById('inp-cover-url').value;
-
-  if (fileInput.files.length > 0) {
-    const file = fileInput.files[0];
-    coverUrl = await toBase64(file);
-  } else if (!coverUrl && editingIndex !== null) {
-    coverUrl = books[editingIndex].copertina;
+  let coverToSave = currentCoverBase64;
+  if (!coverToSave && editingIndex !== null) {
+    coverToSave = books[editingIndex].copertina;
   }
 
   const bookData = {
@@ -91,7 +109,7 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
     edizione: document.getElementById('inp-edition').value,
     formato: document.getElementById('inp-format').value,
     dataFine: document.getElementById('inp-date-end').value,
-    copertina: coverUrl || 'https://via.placeholder.com/65x95?text=Libro'
+    copertina: coverToSave || 'https://via.placeholder.com/65x95?text=Libro'
   };
 
   if(editingIndex !== null) {
@@ -105,15 +123,6 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
   renderHome();
   renderYearsCards();
 });
-
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
-}
 
 // Rendering HOME
 function renderHome() {
@@ -151,7 +160,7 @@ function renderHome() {
   container.innerHTML = sortedBooks.map(b => renderBookCardHTML(b)).join('');
 }
 
-// Rendering Anni con numero libri, pagine totali e formati
+// Rendering Anni
 function renderYearsCards() {
   const container = document.getElementById('years-cards-container');
   const yearsMap = {};
@@ -197,7 +206,7 @@ function closeYearDetails() {
   document.getElementById('years-cards-container').classList.remove('hidden');
 }
 
-// Panoramica con Autori in ordine alfabetico (Nome su, Cognome giù) e Formati distinti
+// Panoramica
 function switchOverviewTab(type) {
   currentOverviewTab = type;
 
@@ -260,7 +269,7 @@ function closeOverviewDetail() {
   document.getElementById('overview-grid').classList.remove('hidden');
 }
 
-// Scheda libro con ordine dei campi e data formattata Giorno Mese Anno
+// Scheda Libro
 function renderBookCardHTML(b, showActions = false) {
   const index = books.findIndex(item => item.id === b.id);
   
@@ -303,9 +312,16 @@ function editBook(index) {
   document.getElementById('inp-serie').value = b.serie || '';
   document.getElementById('inp-edition').value = b.edizione || '';
   document.getElementById('inp-date-end').value = b.dataFine;
-  document.getElementById('inp-cover-url').value = b.copertina.startsWith('http') ? b.copertina : '';
+  currentCoverBase64 = b.copertina;
+  
+  if(b.copertina && b.copertina.startsWith('data:image')) {
+    document.getElementById('cover-preview').src = b.copertina;
+    document.getElementById('cover-preview-container').classList.remove('hidden');
+  } else {
+    document.getElementById('cover-preview-container').classList.add('hidden');
+  }
+  
   setFormat(b.formato);
-
   document.getElementById('form-title').innerText = "Modifica Libro";
   closeYearDetails();
   closeOverviewDetail();
@@ -334,7 +350,7 @@ function updateDatalists() {
   document.getElementById('list-series').innerHTML = series.map(s => `<option value="${s}">`).join('');
 }
 
-// Export CSV e Backup JSON
+// Esportazione CSV
 async function exportData(type) {
   const res = await fetch(`/api/export/${type}`, {
     method: 'POST',
@@ -349,12 +365,22 @@ async function exportData(type) {
   a.click();
 }
 
+// Backup JSON Corretto per salvataggio su telefono
 function backupJSON() {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books));
-  const dlAnchorElem = document.createElement('a');
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "backup_tracker_book.json");
-  dlAnchorElem.click();
+  const dataStr = JSON.stringify(books, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "backup_tracker_book.json";
+  document.body.appendChild(a);
+  a.click();
+  
+  setTimeout(() => {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 100);
 }
 
 function restoreJSON(event) {

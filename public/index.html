@@ -72,14 +72,17 @@
           <button type="button" class="btn-close-circle" onclick="toggleForm()">✕</button>
         </div>
 
+        <!-- Caricamento immagine pulito senza URL Google -->
         <div class="input-group">
-          <label>Copertina (Scatta foto o URL)</label>
-          <div class="file-input-wrapper">
-            <input type="file" id="inp-cover" accept="image/*" capture="environment" onchange="previewThumbnail(event)">
-            <input type="url" id="inp-cover-url" placeholder="Incolla URL copertina da Google">
+          <label>Copertina del Libro</label>
+          <div class="file-upload-box">
+            <label class="btn-file-custom">
+              📁 Scegli foto o scatta immagine
+              <input type="file" id="inp-cover" accept="image/*" capture="environment" onchange="previewThumbnail(event)" style="display:none;">
+            </label>
           </div>
-          <div id="cover-preview-container" class="hidden" style="margin-top:10px;">
-            <img id="cover-preview" class="book-cover" style="width:50px; height:75px;" alt="Anteprima">
+          <div id="cover-preview-container" class="hidden" style="margin-top:12px; text-align:center;">
+            <img id="cover-preview" class="book-cover" style="width:70px; height:100px; margin: 0 auto;" alt="Anteprima">
           </div>
         </div>
 
