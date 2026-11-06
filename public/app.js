@@ -13,12 +13,13 @@ function saveToStorage() {
   updateDatalists();
 }
 
-function switchTab(tabId, title, btnElement) {
+function switchTab(tabId, title, iconSymbol, btnElement) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
 
   document.getElementById(`sec-${tabId}`).classList.add('active');
   document.getElementById('page-title').innerText = title;
+  document.getElementById('header-icon').innerText = iconSymbol;
   
   if(btnElement) btnElement.classList.add('active');
 
@@ -72,7 +73,7 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
     edizione: document.getElementById('inp-edition').value,
     formato: document.getElementById('inp-format').value,
     dataFine: document.getElementById('inp-date-end').value,
-    copertina: coverUrl || 'https://via.placeholder.com/65x95?text=No+Cover'
+    copertina: coverUrl || 'https://via.placeholder.com/70x105?text=Libro'
   };
 
   if(editingIndex !== null) {
@@ -87,7 +88,7 @@ document.getElementById('book-form').addEventListener('submit', async (e) => {
   renderYearsCards();
 });
 
-// Rendering HOME con statistiche dettagliate
+// Rendering HOME con statistiche calde e pagine visibili
 function renderHome() {
   const currentYear = new Date().getFullYear().toString();
   
@@ -109,23 +110,23 @@ function renderHome() {
     }
   });
 
-  // Aggiornamento Totale Globale
-  document.getElementById('stat-total-books').innerText = `${books.length} libri`;
-  document.getElementById('stat-total-cartaceo').innerText = `📖 ${totalCartaceo} Cartacei`;
-  document.getElementById('stat-total-ebook').innerText = `📱 ${totalEbook} Ebook`;
+  // Totale Globale
+  document.getElementById('stat-total-books').innerHTML = `${books.length} <span class="unit">libri</span>`;
   document.getElementById('stat-total-pages').innerText = `${totalPages.toLocaleString()} pagine totali`;
+  document.getElementById('stat-total-cartaceo').innerText = `📖 ${totalCartaceo} cartacei`;
+  document.getElementById('stat-total-ebook').innerText = `📱 ${totalEbook} ebook`;
 
-  // Aggiornamento Anno Corrente
-  document.getElementById('stat-year-books').innerText = `${yearBooks} libri`;
-  document.getElementById('stat-year-cartaceo').innerText = `📖 ${yearCartaceo} Cartacei`;
-  document.getElementById('stat-year-ebook').innerText = `📱 ${yearEbook} Ebook`;
+  // Anno Corrente
+  document.getElementById('stat-year-books').innerHTML = `${yearBooks} <span class="unit">libri</span>`;
   document.getElementById('stat-year-pages').innerText = `${yearPages.toLocaleString()} pagine quest'anno`;
+  document.getElementById('stat-year-cartaceo').innerText = `📖 ${yearCartaceo} cartacei`;
+  document.getElementById('stat-year-ebook').innerText = `📱 ${yearEbook} ebook`;
 
   const container = document.getElementById('home-book-list');
   container.innerHTML = sortedBooks.map(b => renderBookCardHTML(b)).join('');
 }
 
-// Rendering ANNI nella sezione Libri
+// Rendering Anni nella sezione Libri
 function renderYearsCards() {
   const container = document.getElementById('years-cards-container');
   const yearsMap = {};
@@ -140,12 +141,13 @@ function renderYearsCards() {
 
   const years = Object.keys(yearsMap).sort((a,b) => b - a);
   container.innerHTML = years.map(y => `
-    <div class="tile-card" onclick="openYearDetails('${y}')">
-      <div class="tile-title">Anno ${y}</div>
-      <div class="tile-count">${yearsMap[y].count} libri</div>
-      <div class="stat-badge-group" style="margin-top:6px;">
-        <span class="badge badge-cartaceo">📖 ${yearsMap[y].cartaceo}</span>
-        <span class="badge badge-ebook">📱 ${yearsMap[y].ebook}</span>
+    <div class="shelf-tile" onclick="openYearDetails('${y}')">
+      <div class="tile-title">${y}</div>
+      <div class="tile-count">${yearsMap[y].count} letture</div>
+      <div class="stat-breakdown-row" style="margin-top:12px; font-size:14px;">
+        <span>📖 ${yearsMap[y].cartaceo}</span>
+        <span>•</span>
+        <span>📱 ${yearsMap[y].ebook}</span>
       </div>
     </div>
   `).join('');
@@ -155,7 +157,7 @@ function openYearDetails(year) {
   document.getElementById('years-cards-container').classList.add('hidden');
   const details = document.getElementById('year-details');
   details.classList.remove('hidden');
-  document.getElementById('selected-year-title').innerText = `Libri nel ${year}`;
+  document.getElementById('selected-year-title').innerText = `Scaffale Anno ${year}`;
 
   const filtered = books
     .filter(b => (b.dataFine ? b.dataFine.startsWith(year) : year === 'Senza Data'))
@@ -169,11 +171,10 @@ function closeYearDetails() {
   document.getElementById('years-cards-container').classList.remove('hidden');
 }
 
-// PANORAMICA A TASSELLI (Autori, Serie, Formati)
+// Panoramica App-Style
 function switchOverviewTab(type) {
   currentOverviewTab = type;
 
-  // Toggle dei pulsanti segmentati
   document.getElementById('btn-ov-authors').classList.toggle('active', type === 'authors');
   document.getElementById('btn-ov-series').classList.toggle('active', type === 'series');
   document.getElementById('btn-ov-formats').classList.toggle('active', type === 'formats');
@@ -196,7 +197,7 @@ function switchOverviewTab(type) {
   const keys = Object.keys(groups).sort((a,b) => a.localeCompare(b));
 
   grid.innerHTML = keys.map(k => `
-    <div class="tile-card" onclick="openOverviewDetail('${type}', '${encodeURIComponent(k)}')">
+    <div class="shelf-tile" onclick="openOverviewDetail('${type}', '${encodeURIComponent(k)}')">
       <div class="tile-title">${k}</div>
       <div class="tile-count">${groups[k].length} libri letti</div>
     </div>
@@ -225,7 +226,7 @@ function closeOverviewDetail() {
   document.getElementById('overview-grid').classList.remove('hidden');
 }
 
-// Card Generica del Libro
+// Card Libro Unificata
 function renderBookCardHTML(b, showActions = false) {
   const index = books.findIndex(item => item.id === b.id);
   return `
@@ -234,9 +235,9 @@ function renderBookCardHTML(b, showActions = false) {
       <div class="book-info">
         <h4>${b.titolo}</h4>
         <p><strong>Autore:</strong> ${b.autore}</p>
-        <p><strong>Formato:</strong> ${b.formato} (${b.pagine} pag.)</p>
+        <p><strong>Formato:</strong> ${b.formato} • ${b.pagine} pag.</p>
         ${b.serie ? `<p><strong>Serie:</strong> ${b.serie}</p>` : ''}
-        <p><strong>Finito:</strong> ${b.dataFine || 'N/D'}</p>
+        <p><strong>Terminato:</strong> ${b.dataFine || 'N/D'}</p>
         ${showActions ? `
           <div class="action-buttons">
             <button class="action-btn btn-edit" onclick="editBook(${index})">Modifica</button>
@@ -265,13 +266,12 @@ function editBook(index) {
   closeYearDetails();
   closeOverviewDetail();
   
-  // Vai alla scheda Libri ed apri il form
-  switchTab('libri', 'Libri', document.querySelectorAll('.tab-item')[1]);
+  switchTab('libri', 'Libreria', '📚', document.querySelectorAll('.tab-item')[1]);
   document.getElementById('book-form').classList.remove('hidden');
 }
 
 function deleteBook(index) {
-  if(confirm('Vuoi davvero eliminare questo libro?')) {
+  if(confirm('Vuoi rimuovere questo libro dalla libreria?')) {
     books.splice(index, 1);
     saveToStorage();
     renderHome();
@@ -319,17 +319,17 @@ function restoreJSON(event) {
     try {
       books = JSON.parse(e.target.result);
       saveToStorage();
-      alert('Ripristino completato!');
+      alert('Ripristino completato con successo!');
       renderHome();
     } catch(err) {
-      alert('File non valido!');
+      alert('File di backup non valido!');
     }
   };
   fileReader.readAsText(event.target.files[0]);
 }
 
 function clearAllData() {
-  if(confirm('Attenzione: questa azione cancellerà tutti i libri inseriti. Continuare?')) {
+  if(confirm('Attenzione: questa azione eliminerà tutti i libri salvati. Vuoi procedere?')) {
     books = [];
     saveToStorage();
     renderHome();

@@ -1,240 +1,472 @@
 :root {
-  --bg-color: #F2F2F7;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --text-primary: #000000;
-  --text-secondary: #8E8E93;
-  --accent: #007AFF;
-  --accent-light: #E5F1FF;
-  --danger: #FF3B30;
-  --border-color: #C6C6C8;
-  --radius: 14px;
-  --shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  --bg-parchment: #F6F3ED;
+  --card-bg: #FFFFFF;
+  --text-main: #2C221E;
+  --text-muted: #7A6E65;
+  --accent-terracotta: #A85338;
+  --accent-gold: #C28E38;
+  --warm-border: #E8E1D5;
+  --shadow-3d: 0 10px 30px -5px rgba(50, 38, 30, 0.08), 0 4px 12px -2px rgba(50, 38, 30, 0.04);
+  --shadow-hover: 0 16px 36px -6px rgba(50, 38, 30, 0.12), 0 6px 16px -3px rgba(50, 38, 30, 0.06);
+  --radius-xl: 22px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  padding-bottom: 95px;
+  /* Applicazione Garamond come richiesto */
+  font-family: 'EB Garamond', Garamond, Georgia, serif;
+  background-color: var(--bg-parchment);
+  color: var(--text-main);
+  padding-bottom: 110px;
   -webkit-tap-highlight-color: transparent;
+  font-size: 18px;
+  line-height: 1.5;
 }
 
-/* App Header iOS Blur */
+/* Header con Banner ed Effetto Caldo */
 .app-header {
   position: sticky;
   top: 0;
-  background: rgba(242, 242, 247, 0.85);
+  background: rgba(246, 243, 237, 0.90);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  padding: 16px 20px 12px 20px;
-  border-bottom: 0.5px solid var(--border-color);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--warm-border);
   z-index: 100;
+}
+
+.header-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-icon {
+  font-size: 26px;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
+  color: var(--text-main);
 }
 
-main { padding: 16px; }
+main { padding: 20px; max-width: 700px; margin: 0 auto; }
 
-.section-label {
-  font-size: 13px;
+.section-title-badge {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--accent-terracotta);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 15px 0 8px 4px;
+  letter-spacing: 1.5px;
+  margin: 20px 0 10px 4px;
 }
 
 .tab-content { display: none; }
-.tab-content.active { display: block; animation: fadeIn 0.25s ease-in-out; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Grid & Cards */
-.stats-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 20px; }
+/* 3D Cards & Effetti Arrotondati */
+.3d-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3d);
+  border: 1px solid rgba(232, 225, 213, 0.8);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-@media (min-width: 400px) {
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 500px) {
   .stats-grid { grid-template-columns: 1fr 1fr; }
 }
 
 .stat-card {
-  background: var(--card-bg);
-  padding: 16px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  padding: 22px;
   display: flex;
   flex-direction: column;
 }
 
-.stat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.stat-icon { font-size: 18px; }
-.stat-card h3 { font-size: 13px; color: var(--text-secondary); margin: 0; text-transform: uppercase; font-weight: 600; }
-.stat-number { font-size: 24px; font-weight: 800; margin: 4px 0 8px 0; color: var(--text-primary); }
+.stat-header-flex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
 
-.stat-badge-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.badge { font-size: 11px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
-.badge-cartaceo { background: #E8F5E9; color: #2E7D32; }
-.badge-ebook { background: #E3F2FD; color: #1565C0; }
+.card-icon-symbol { font-size: 20px; }
 
-.stat-sub { font-size: 12px; color: var(--text-secondary); }
+.stat-category-title {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
 
-/* Book Card Stylings */
+/* Niente grassetto pesante, numeri eleganti in Garamond */
+.stat-main-value {
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.stat-main-value .unit {
+  font-size: 20px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Numero pagine super visibile */
+.stat-pages-highlight {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent-terracotta);
+  margin-bottom: 12px;
+}
+
+.stat-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--warm-border);
+  padding-top: 10px;
+  margin-top: auto;
+}
+
+.dot-separator { color: var(--accent-gold); }
+
+/* Card Libro Stile 3D */
 .book-card {
   background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: 14px;
+  border-radius: var(--radius-lg);
+  padding: 16px;
   display: flex;
-  gap: 14px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
+  gap: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-3d);
+  border: 1px solid rgba(232, 225, 213, 0.8);
   align-items: center;
-  transition: transform 0.1s ease;
+  transition: transform 0.15s ease;
 }
 
 .book-card:active { transform: scale(0.98); }
 
 .book-cover {
-  width: 65px;
-  height: 95px;
+  width: 70px;
+  height: 105px;
   object-fit: cover;
-  border-radius: 8px;
-  background: #E5E5EA;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  border-radius: 10px;
+  background: #EAE3D9;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
 .book-info { flex: 1; }
-.book-info h4 { margin: 0 0 6px 0; font-size: 17px; font-weight: 600; line-height: 1.2; }
-.book-info p { margin: 3px 0; font-size: 13px; color: var(--text-secondary); }
-.book-info strong { color: var(--text-primary); font-weight: 500; }
-
-.action-buttons { display: flex; gap: 12px; margin-top: 8px; }
-.action-btn { background: none; border: none; font-size: 13px; font-weight: 600; padding: 0; cursor: pointer; }
-.btn-edit { color: var(--accent); }
-.btn-delete { color: var(--danger); }
-
-/* Grid Panoramica & Anni (Tasselli iOS) */
-.overview-grid, .years-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
+.book-info h4 {
+  margin: 0 0 6px 0;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-main);
 }
 
-.tile-card {
+.book-info p {
+  margin: 3px 0;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.book-info strong { color: var(--text-main); font-weight: 600; }
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--warm-border);
+}
+
+.action-btn { background: none; border: none; font-size: 15px; font-weight: 600; padding: 0; cursor: pointer; font-family: inherit; }
+.btn-edit { color: var(--accent-gold); }
+.btn-delete { color: #A83838; }
+
+/* Scaffale Anni e Panoramica App-Style */
+.years-scroller-grid, .overview-app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.shelf-tile {
   background: var(--card-bg);
-  padding: 16px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3d);
+  border: 1px solid var(--warm-border);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.tile-card:active { transform: scale(0.96); background: #FFFFFF; }
-.tile-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; word-break: break-word; }
-.tile-count { font-size: 13px; color: var(--accent); font-weight: 600; }
+.shelf-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.shelf-tile:active { transform: scale(0.97); }
 
-.details-title { font-size: 22px; font-weight: 700; margin: 10px 0 16px 0; }
+.tile-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-main);
+  word-break: break-word;
+}
 
-/* Segmented Control iOS */
-.segmented-control {
+.tile-count {
+  font-size: 16px;
+  color: var(--accent-terracotta);
+  font-weight: 600;
+}
+
+.shelf-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 10px 0 20px 0;
+  color: var(--text-main);
+}
+
+/* Bottoni 3D Caldi */
+.btn-primary, .btn-save {
+  width: 100%;
+  background: linear-gradient(135deg, #B55C3F 0%, #984325 100%);
+  color: #FFF;
+  border: none;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 18px;
+  font-family: inherit;
+  box-shadow: 0 8px 20px rgba(152, 67, 37, 0.25);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  margin-bottom: 16px;
+}
+
+.btn-primary:active, .btn-save:active { transform: scale(0.98); }
+
+/* Form 3D Super Arrotondato */
+.3d-form {
+  background: #FFFFFF;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-3d);
+  border: 1px solid var(--warm-border);
+  margin-bottom: 24px;
+}
+
+.form-top-bar {
   display: flex;
-  background: #E3E3E8;
-  padding: 3px;
-  border-radius: 9px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.segment {
+.form-top-bar h3 { margin: 0; font-size: 24px; font-weight: 700; }
+.btn-close-circle {
+  background: var(--bg-parchment);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.input-group { margin-bottom: 16px; }
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+input[type="text"], input[type="number"], input[type="date"], input[type="url"], input[type="file"] {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--warm-border);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+  font-size: 17px;
+  font-family: inherit;
+  background: #FAF8F5;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent-terracotta);
+  background: #FFFFFF;
+}
+
+.input-row { display: flex; gap: 12px; }
+
+/* Segmented Control a Pillola 3D */
+.pill-segmented-control {
+  display: flex;
+  background: #EFEAEE;
+  padding: 4px;
+  border-radius: 30px;
+  margin-bottom: 12px;
+}
+
+.pill-segment {
   flex: 1;
   border: none;
-  padding: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 7px;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 26px;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.segment.active {
+.pill-segment.active {
   background: #FFFFFF;
+  color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.form-actions-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.btn-cancel {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-back-link {
+  background: transparent;
+  border: none;
+  color: var(--accent-terracotta);
+  font-size: 18px;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  font-family: inherit;
+  padding: 0;
+  margin-bottom: 14px;
+  cursor: pointer;
 }
 
-/* Form iOS Modal Style */
-.ios-form {
-  background: #FFFFFF;
-  padding: 18px;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-  margin-bottom: 20px;
+/* Settings & Azioni */
+.settings-card {
+  padding: 20px;
+  margin-bottom: 16px;
 }
 
-.form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.form-header h3 { margin: 0; font-size: 20px; }
-.btn-icon-close { background: #E5E5EA; border: none; border-radius: 50%; width: 28px; height: 28px; font-weight: bold; }
-
-.form-group { margin-bottom: 14px; }
-.form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-
-input[type="text"], input[type="number"], input[type="date"], input[type="url"], input[type="file"] {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  box-sizing: border-box;
+.settings-card-title {
   font-size: 15px;
-  background: #F9F9FB;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
 }
 
-.row-inputs { display: flex; gap: 10px; }
-.cover-input-grid { display: flex; flex-direction: column; gap: 8px; }
+.btn-warm {
+  width: 100%;
+  background: #FFFFFF;
+  color: var(--accent-terracotta);
+  border: 1.5px solid var(--warm-border);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 17px;
+  font-family: inherit;
+  text-align: center;
+  box-sizing: border-box;
+  display: block;
+  cursor: pointer;
+  transition: background 0.2s;
+}
 
-/* Buttons */
-.btn-primary { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 8px rgba(0,122,255,0.3); }
-.btn-primary:active { transform: scale(0.98); }
-.btn-save { width: 100%; background: var(--accent); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 16px; }
-.btn-secondary { width: 100%; background: #FFFFFF; color: var(--accent); border: 1px solid var(--border-color); padding: 13px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; text-align: center; box-sizing: border-box; display: block; }
-.btn-danger { width: 100%; background: #FFEEEE; color: var(--danger); border: 1px solid #FFCCCC; padding: 13px; border-radius: 12px; font-weight: 600; }
-.btn-cancel { width: 100%; background: transparent; color: var(--text-secondary); border: none; padding: 10px; margin-top: 5px; font-size: 15px; }
-.btn-back { background: transparent; border: none; color: var(--accent); font-size: 17px; font-weight: 600; padding: 0; margin-bottom: 10px; cursor: pointer; }
+.btn-warm:active { background: #F3EEEA; }
 
-/* Settings */
-.settings-group { margin-bottom: 22px; }
-.settings-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; padding-left: 4px; }
+.danger-card { border-color: #F0CCCC; }
+.btn-danger-warm {
+  width: 100%;
+  background: #FDF2F2;
+  color: #A83838;
+  border: 1.5px solid #F5C6C6;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 17px;
+  font-family: inherit;
+  cursor: pointer;
+}
 
-/* Tab Bar */
+.btn-file-label { cursor: pointer; display: block; }
+
+/* Tab Bar Inferiore Stile Libreria Apple */
 .tab-bar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: 65px;
-  background: rgba(255, 255, 255, 0.90);
+  height: 70px;
+  background: rgba(246, 243, 237, 0.92);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  border-top: 0.5px solid var(--border-color);
-  padding-bottom: 12px;
+  border-top: 1px solid var(--warm-border);
+  padding-bottom: 14px;
   z-index: 100;
 }
 
-.tab-item { background: none; border: none; display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); transition: color 0.15s ease; }
-.tab-item.active { color: var(--accent); }
-.tab-item .icon { font-size: 22px; }
-.tab-item .label { font-size: 10px; font-weight: 500; margin-top: 2px; }
+.tab-item {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-muted);
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.tab-item.active { color: var(--accent-terracotta); font-weight: 600; }
+.tab-item .icon { font-size: 24px; }
+.tab-item .label { font-size: 11px; margin-top: 2px; }
 
 .hidden { display: none !important; }
-.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }

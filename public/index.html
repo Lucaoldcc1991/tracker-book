@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Tracker Book</title>
+  <!-- Google Fonts: EB Garamond per un look letterario ed elegante -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -13,168 +18,176 @@
 <body>
 
   <header class="app-header">
-    <h1 id="page-title">Home</h1>
+    <div class="header-banner">
+      <span class="header-icon" id="header-icon">📖</span>
+      <h1 id="page-title">Home</h1>
+    </div>
   </header>
 
   <main id="app-content">
     <!-- Sezione HOME -->
     <section id="sec-home" class="tab-content active">
-      <div class="section-label">STATISTICHE LETTURA</div>
+      <div class="section-title-badge">Situazione Letture</div>
+      
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-icon">📚</span>
-            <h3>Totale Globale</h3>
+        <!-- Statistica Totale Globale -->
+        <div class="stat-card 3d-card">
+          <div class="stat-header-flex">
+            <span class="card-icon-symbol">📚</span>
+            <span class="stat-category-title">Totale Globale</span>
           </div>
-          <p id="stat-total-books" class="stat-number">0 libri</p>
-          <div class="stat-badge-group">
-            <span id="stat-total-cartaceo" class="badge badge-cartaceo">📖 0 Cartacei</span>
-            <span id="stat-total-ebook" class="badge badge-ebook">📱 0 Ebook</span>
+          <div class="stat-main-value" id="stat-total-books">0 <span class="unit">libri</span></div>
+          <div class="stat-pages-highlight" id="stat-total-pages">0 pagine lette</div>
+          <div class="stat-breakdown-row">
+            <span class="sub-item" id="stat-total-cartaceo">📖 0 cartacei</span>
+            <span class="dot-separator">•</span>
+            <span class="sub-item" id="stat-total-ebook">📱 0 ebook</span>
           </div>
-          <span id="stat-total-pages" class="stat-sub">0 pagine totali</span>
         </div>
 
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-icon">📅</span>
-            <h3>Anno Corrente</h3>
+        <!-- Statistica Anno Corrente -->
+        <div class="stat-card 3d-card">
+          <div class="stat-header-flex">
+            <span class="card-icon-symbol">⏳</span>
+            <span class="stat-category-title">Anno Corrente</span>
           </div>
-          <p id="stat-year-books" class="stat-number">0 libri</p>
-          <div class="stat-badge-group">
-            <span id="stat-year-cartaceo" class="badge badge-cartaceo">📖 0 Cartacei</span>
-            <span id="stat-year-ebook" class="badge badge-ebook">📱 0 Ebook</span>
+          <div class="stat-main-value" id="stat-year-books">0 <span class="unit">libri</span></div>
+          <div class="stat-pages-highlight" id="stat-year-pages">0 pagine quest'anno</div>
+          <div class="stat-breakdown-row">
+            <span class="sub-item" id="stat-year-cartaceo">📖 0 cartacei</span>
+            <span class="dot-separator">•</span>
+            <span class="sub-item" id="stat-year-ebook">📱 0 ebook</span>
           </div>
-          <span id="stat-year-pages" class="stat-sub">0 pagine quest'anno</span>
         </div>
       </div>
 
-      <div class="section-label">RECENTI</div>
+      <div class="section-title-badge" style="margin-top: 24px;">Ultime Letture</div>
       <div id="home-book-list" class="book-list"></div>
     </section>
 
     <!-- Sezione LIBRI -->
     <section id="sec-libri" class="tab-content">
-      <button class="btn-primary" onclick="toggleForm()">+ Aggiungi Nuovo Libro</button>
+      <button class="btn-primary 3d-btn" onclick="toggleForm()">+ Aggiungi Nuovo Libro</button>
 
-      <form id="book-form" class="hidden ios-form">
-        <div class="form-header">
+      <!-- Form 3D Arrotondato -->
+      <form id="book-form" class="hidden 3d-form">
+        <div class="form-top-bar">
           <h3 id="form-title">Nuovo Libro</h3>
-          <button type="button" class="btn-icon-close" onclick="toggleForm()">✕</button>
+          <button type="button" class="btn-close-circle" onclick="toggleForm()">✕</button>
         </div>
 
-        <div class="form-group">
-          <label>COPERTINA</label>
-          <div class="cover-input-grid">
+        <div class="input-group">
+          <label>Copertina (Scatta foto o URL)</label>
+          <div class="file-input-wrapper">
             <input type="file" id="inp-cover" accept="image/*" capture="environment">
-            <input type="url" id="inp-cover-url" placeholder="Oppure incolla URL copertina">
+            <input type="url" id="inp-cover-url" placeholder="Incolla URL copertina da Google">
           </div>
         </div>
 
-        <div class="form-group">
-          <label>DATI LIBRO</label>
-          <input type="text" id="inp-title" placeholder="Titolo *" required>
+        <div class="input-group">
+          <input type="text" id="inp-title" placeholder="Titolo del libro *" required>
           <input type="text" id="inp-author" placeholder="Autore *" list="list-authors" required>
           <datalist id="list-authors"></datalist>
 
-          <div class="row-inputs">
+          <div class="input-row">
             <input type="number" id="inp-pages" placeholder="Pagine *" required>
-            <input type="number" id="inp-year" placeholder="Anno Pubbl.">
+            <input type="number" id="inp-year" placeholder="Anno pubbl.">
           </div>
           
           <input type="text" id="inp-serie" placeholder="Serie / Argomento" list="list-series">
           <datalist id="list-series"></datalist>
 
-          <input type="text" id="inp-edition" placeholder="Edizione">
+          <input type="text" id="inp-edition" placeholder="Edizione / Casa Editrice">
         </div>
 
-        <div class="form-group">
-          <label>FORMATO</label>
-          <div class="segmented-control">
-            <button type="button" id="btn-cartaceo" class="segment active" onclick="setFormat('Cartaceo')">📖 Cartaceo</button>
-            <button type="button" id="btn-ebook" class="segment" onclick="setFormat('Ebook')">📱 Ebook</button>
+        <div class="input-group">
+          <label>Formato di lettura</label>
+          <div class="pill-segmented-control">
+            <button type="button" id="btn-cartaceo" class="pill-segment active" onclick="setFormat('Cartaceo')">📖 Cartaceo</button>
+            <button type="button" id="btn-ebook" class="pill-segment" onclick="setFormat('Ebook')">📱 Ebook</button>
           </div>
           <input type="hidden" id="inp-format" value="Cartaceo">
         </div>
 
-        <div class="form-group">
-          <label>DATA FINE LETTURA *</label>
+        <div class="input-group">
+          <label>Data fine lettura *</label>
           <input type="date" id="inp-date-end" required>
         </div>
 
-        <div class="form-actions">
-          <button type="submit" class="btn-save">Salva Libro</button>
+        <div class="form-actions-stack">
+          <button type="submit" class="btn-save 3d-btn">Salva nella libreria</button>
           <button type="button" class="btn-cancel" onclick="toggleForm()">Annulla</button>
         </div>
       </form>
 
-      <div class="section-label">ARCHIVIO PER ANNO</div>
-      <div id="years-cards-container" class="years-container"></div>
+      <div class="section-title-badge">Scaffale per Anno</div>
+      <div id="years-cards-container" class="years-scroller-grid"></div>
       
       <div id="year-details" class="hidden">
-        <button class="btn-back" onclick="closeYearDetails()">‹ Torna agli anni</button>
-        <h2 id="selected-year-title" class="details-title"></h2>
+        <button class="btn-back-link" onclick="closeYearDetails()">‹ Torna agli anni</button>
+        <h2 id="selected-year-title" class="shelf-title"></h2>
         <div id="year-book-list" class="book-list"></div>
       </div>
     </section>
 
     <!-- Sezione PANORAMICA -->
     <section id="sec-panoramica" class="tab-content">
-      <div class="segmented-control mb-15">
-        <button id="btn-ov-authors" class="segment active" onclick="switchOverviewTab('authors')">Autori</button>
-        <button id="btn-ov-series" class="segment" onclick="switchOverviewTab('series')">Serie/Argomenti</button>
-        <button id="btn-ov-formats" class="segment" onclick="switchOverviewTab('formats')">Formato</button>
+      <div class="pill-segmented-control mb-20">
+        <button id="btn-ov-authors" class="pill-segment active" onclick="switchOverviewTab('authors')">Autori</button>
+        <button id="btn-ov-series" class="pill-segment" onclick="switchOverviewTab('series')">Serie / Argomenti</button>
+        <button id="btn-ov-formats" class="pill-segment" onclick="switchOverviewTab('formats')">Formato</button>
       </div>
 
-      <!-- Elenco a tasselli/card delle categorie -->
-      <div id="overview-grid" class="overview-grid"></div>
+      <!-- Griglia App-Style raffinata -->
+      <div id="overview-grid" class="overview-app-grid"></div>
 
-      <!-- Dettaglio di una singola categoria selezionata -->
+      <!-- Dettaglio Elemento Panoramica -->
       <div id="overview-detail" class="hidden">
-        <button class="btn-back" onclick="closeOverviewDetail()">‹ Torna alla panoramica</button>
-        <h2 id="overview-detail-title" class="details-title"></h2>
+        <button class="btn-back-link" onclick="closeOverviewDetail()">‹ Torna alla panoramica</button>
+        <h2 id="overview-detail-title" class="shelf-title"></h2>
         <div id="overview-detail-list" class="book-list"></div>
       </div>
     </section>
 
     <!-- Sezione SETTINGS -->
     <section id="sec-settings" class="tab-content">
-      <div class="settings-group">
-        <div class="settings-title">EXPORT DATI</div>
-        <button class="btn-secondary" onclick="exportData('csv')">📄 Esporta CSV (Tabella completa)</button>
-        <button class="btn-secondary" onclick="exportData('pdf')">📕 Esporta PDF (Riepilogo stampabile)</button>
+      <div class="settings-card 3d-card">
+        <div class="settings-card-title">Esportazione Dati</div>
+        <button class="btn-warm" onclick="exportData('csv')">📄 Esporta Tabella CSV</button>
+        <button class="btn-warm" onclick="exportData('pdf')">📕 Esporta Riepilogo PDF</button>
       </div>
 
-      <div class="settings-group">
-        <div class="settings-title">BACKUP & RIPRISTINO</div>
-        <button class="btn-secondary" onclick="backupJSON()">💾 Scarica Backup (JSON)</button>
-        <label class="btn-secondary btn-file">
-          📥 Ripristina Backup JSON
+      <div class="settings-card 3d-card">
+        <div class="settings-card-title">Backup e Ripristino</div>
+        <button class="btn-warm" onclick="backupJSON()">💾 Scarica Backup JSON</button>
+        <label class="btn-warm btn-file-label">
+          📥 Ripristina da Backup JSON
           <input type="file" id="inp-restore" accept=".json" onchange="restoreJSON(event)" style="display:none;">
         </label>
       </div>
 
-      <div class="settings-group danger-zone">
-        <div class="settings-title">ZONA DI PERICOLO</div>
-        <button class="btn-danger" onclick="clearAllData()">🗑️ Cancella Tutto il Contenuto</button>
+      <div class="settings-card 3d-card danger-card">
+        <div class="settings-card-title" style="color: #9C3A3A;">Zona Pericolo</div>
+        <button class="btn-danger-warm" onclick="clearAllData()">🗑️ Cancella tutti i dati</button>
       </div>
     </section>
   </main>
 
-  <!-- Tab Bar Inferiore Stile iOS -->
+  <!-- Tab Bar Inferiore Stile iOS Libreria -->
   <nav class="tab-bar">
-    <button class="tab-item active" onclick="switchTab('home', 'Home', this)">
+    <button class="tab-item active" onclick="switchTab('home', 'Home', '📖', this)">
       <span class="icon">🏠</span>
       <span class="label">Home</span>
     </button>
-    <button class="tab-item" onclick="switchTab('libri', 'Libri', this)">
+    <button class="tab-item" onclick="switchTab('libri', 'Libreria', '📚', this)">
       <span class="icon">📚</span>
       <span class="label">Libri</span>
     </button>
-    <button class="tab-item" onclick="switchTab('panoramica', 'Panoramica', this)">
-      <span class="icon">📊</span>
+    <button class="tab-item" onclick="switchTab('panoramica', 'Panoramica', '☕', this)">
+      <span class="icon">☕</span>
       <span class="label">Panoramica</span>
     </button>
-    <button class="tab-item" onclick="switchTab('settings', 'Settings', this)">
+    <button class="tab-item" onclick="switchTab('settings', 'Impostazioni', '⚙️', this)">
       <span class="icon">⚙️</span>
       <span class="label">Settings</span>
     </button>
