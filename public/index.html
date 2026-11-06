@@ -19,54 +19,87 @@
   <main id="app-content">
     <!-- Sezione HOME -->
     <section id="sec-home" class="tab-content active">
+      <div class="section-label">STATISTICHE LETTURA</div>
       <div class="stats-grid">
         <div class="stat-card">
-          <h3>Totale Globale</h3>
-          <p id="stat-total-books">0 libri</p>
-          <span id="stat-total-pages">0 pagine</span>
+          <div class="stat-header">
+            <span class="stat-icon">📚</span>
+            <h3>Totale Globale</h3>
+          </div>
+          <p id="stat-total-books" class="stat-number">0 libri</p>
+          <div class="stat-badge-group">
+            <span id="stat-total-cartaceo" class="badge badge-cartaceo">📖 0 Cartacei</span>
+            <span id="stat-total-ebook" class="badge badge-ebook">📱 0 Ebook</span>
+          </div>
+          <span id="stat-total-pages" class="stat-sub">0 pagine totali</span>
         </div>
+
         <div class="stat-card">
-          <h3>Anno Corrente</h3>
-          <p id="stat-year-books">0 libri</p>
-          <span id="stat-year-breakdown">Cartaceo: 0 | Ebook: 0</span>
+          <div class="stat-header">
+            <span class="stat-icon">📅</span>
+            <h3>Anno Corrente</h3>
+          </div>
+          <p id="stat-year-books" class="stat-number">0 libri</p>
+          <div class="stat-badge-group">
+            <span id="stat-year-cartaceo" class="badge badge-cartaceo">📖 0 Cartacei</span>
+            <span id="stat-year-ebook" class="badge badge-ebook">📱 0 Ebook</span>
+          </div>
+          <span id="stat-year-pages" class="stat-sub">0 pagine quest'anno</span>
         </div>
       </div>
 
-      <h2>Cronologia Letture</h2>
+      <div class="section-label">RECENTI</div>
       <div id="home-book-list" class="book-list"></div>
     </section>
 
-    <!-- Sezione LIBRI (Form e Anni) -->
+    <!-- Sezione LIBRI -->
     <section id="sec-libri" class="tab-content">
       <button class="btn-primary" onclick="toggleForm()">+ Aggiungi Nuovo Libro</button>
 
-      <form id="book-form" class="hidden">
-        <h3>Nuovo Libro</h3>
-        
-        <label>Copertina (Scatta foto / Carica)</label>
-        <input type="file" id="inp-cover" accept="image/*">
-        <input type="url" id="inp-cover-url" placeholder="Oppure incolla URL da Google">
-
-        <input type="text" id="inp-title" placeholder="Titolo *" required>
-        <input type="text" id="inp-author" placeholder="Autore *" list="list-authors" required>
-        <datalist id="list-authors"></datalist>
-
-        <input type="number" id="inp-pages" placeholder="Numero Pagine *" required>
-        <input type="number" id="inp-year" placeholder="Anno Pubblicazione">
-        
-        <input type="text" id="inp-serie" placeholder="Serie / Argomento" list="list-series">
-        <datalist id="list-series"></datalist>
-
-        <input type="text" id="inp-edition" placeholder="Edizione">
-
-        <div class="segmented-control">
-          <button type="button" id="btn-cartaceo" class="segment active" onclick="setFormat('Cartaceo')">Cartaceo</button>
-          <button type="button" id="btn-ebook" class="segment" onclick="setFormat('Ebook')">Ebook</button>
+      <form id="book-form" class="hidden ios-form">
+        <div class="form-header">
+          <h3 id="form-title">Nuovo Libro</h3>
+          <button type="button" class="btn-icon-close" onclick="toggleForm()">✕</button>
         </div>
-        <input type="hidden" id="inp-format" value="Cartaceo">
 
-        <label>Data di fine lettura *</label>
-        <input type="date" id="inp-date-end" required>
+        <div class="form-group">
+          <label>COPERTINA</label>
+          <div class="cover-input-grid">
+            <input type="file" id="inp-cover" accept="image/*" capture="environment">
+            <input type="url" id="inp-cover-url" placeholder="Oppure incolla URL copertina">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>DATI LIBRO</label>
+          <input type="text" id="inp-title" placeholder="Titolo *" required>
+          <input type="text" id="inp-author" placeholder="Autore *" list="list-authors" required>
+          <datalist id="list-authors"></datalist>
+
+          <div class="row-inputs">
+            <input type="number" id="inp-pages" placeholder="Pagine *" required>
+            <input type="number" id="inp-year" placeholder="Anno Pubbl.">
+          </div>
+          
+          <input type="text" id="inp-serie" placeholder="Serie / Argomento" list="list-series">
+          <datalist id="list-series"></datalist>
+
+          <input type="text" id="inp-edition" placeholder="Edizione">
+        </div>
+
+        <div class="form-group">
+          <label>FORMATO</label>
+          <div class="segmented-control">
+            <button type="button" id="btn-cartaceo" class="segment active" onclick="setFormat('Cartaceo')">📖 Cartaceo</button>
+            <button type="button" id="btn-ebook" class="segment" onclick="setFormat('Ebook')">📱 Ebook</button>
+          </div>
+          <input type="hidden" id="inp-format" value="Cartaceo">
+        </div>
+
+        <div class="form-group">
+          <label>DATA FINE LETTURA *</label>
+          <input type="date" id="inp-date-end" required>
+        </div>
 
         <div class="form-actions">
           <button type="submit" class="btn-save">Salva Libro</button>
@@ -74,10 +107,12 @@
         </div>
       </form>
 
+      <div class="section-label">ARCHIVIO PER ANNO</div>
       <div id="years-cards-container" class="years-container"></div>
+      
       <div id="year-details" class="hidden">
-        <button class="btn-back" onclick="closeYearDetails()">← Torna agli anni</button>
-        <h2 id="selected-year-title"></h2>
+        <button class="btn-back" onclick="closeYearDetails()">‹ Torna agli anni</button>
+        <h2 id="selected-year-title" class="details-title"></h2>
         <div id="year-book-list" class="book-list"></div>
       </div>
     </section>
@@ -85,52 +120,61 @@
     <!-- Sezione PANORAMICA -->
     <section id="sec-panoramica" class="tab-content">
       <div class="segmented-control mb-15">
-        <button class="segment active" onclick="switchOverviewTab('authors')">Autori</button>
-        <button class="segment" onclick="switchOverviewTab('series')">Serie/Argomenti</button>
-        <button class="segment" onclick="switchOverviewTab('formats')">Formato</button>
+        <button id="btn-ov-authors" class="segment active" onclick="switchOverviewTab('authors')">Autori</button>
+        <button id="btn-ov-series" class="segment" onclick="switchOverviewTab('series')">Serie/Argomenti</button>
+        <button id="btn-ov-formats" class="segment" onclick="switchOverviewTab('formats')">Formato</button>
       </div>
-      <div id="overview-content"></div>
+
+      <!-- Elenco a tasselli/card delle categorie -->
+      <div id="overview-grid" class="overview-grid"></div>
+
+      <!-- Dettaglio di una singola categoria selezionata -->
+      <div id="overview-detail" class="hidden">
+        <button class="btn-back" onclick="closeOverviewDetail()">‹ Torna alla panoramica</button>
+        <h2 id="overview-detail-title" class="details-title"></h2>
+        <div id="overview-detail-list" class="book-list"></div>
+      </div>
     </section>
 
     <!-- Sezione SETTINGS -->
     <section id="sec-settings" class="tab-content">
       <div class="settings-group">
-        <h3>Export Dati</h3>
-        <button class="btn-secondary" onclick="exportData('csv')">Esporta CSV (Tabella)</button>
-        <button class="btn-secondary" onclick="exportData('pdf')">Esporta PDF (Stampa)</button>
+        <div class="settings-title">EXPORT DATI</div>
+        <button class="btn-secondary" onclick="exportData('csv')">📄 Esporta CSV (Tabella completa)</button>
+        <button class="btn-secondary" onclick="exportData('pdf')">📕 Esporta PDF (Riepilogo stampabile)</button>
       </div>
 
       <div class="settings-group">
-        <h3>Backup e Ripristino</h3>
-        <button class="btn-secondary" onclick="backupJSON()">Scarica Backup (JSON)</button>
+        <div class="settings-title">BACKUP & RIPRISTINO</div>
+        <button class="btn-secondary" onclick="backupJSON()">💾 Scarica Backup (JSON)</button>
         <label class="btn-secondary btn-file">
-          Ripristina Backup JSON
+          📥 Ripristina Backup JSON
           <input type="file" id="inp-restore" accept=".json" onchange="restoreJSON(event)" style="display:none;">
         </label>
       </div>
 
       <div class="settings-group danger-zone">
-        <h3>Zona Pericolo</h3>
-        <button class="btn-danger" onclick="clearAllData()">Cancella Tutto il Contenuto</button>
+        <div class="settings-title">ZONA DI PERICOLO</div>
+        <button class="btn-danger" onclick="clearAllData()">🗑️ Cancella Tutto il Contenuto</button>
       </div>
     </section>
   </main>
 
   <!-- Tab Bar Inferiore Stile iOS -->
   <nav class="tab-bar">
-    <button class="tab-item active" onclick="switchTab('home', 'Home')">
+    <button class="tab-item active" onclick="switchTab('home', 'Home', this)">
       <span class="icon">🏠</span>
       <span class="label">Home</span>
     </button>
-    <button class="tab-item" onclick="switchTab('libri', 'Libri')">
+    <button class="tab-item" onclick="switchTab('libri', 'Libri', this)">
       <span class="icon">📚</span>
       <span class="label">Libri</span>
     </button>
-    <button class="tab-item" onclick="switchTab('panoramica', 'Panoramica')">
+    <button class="tab-item" onclick="switchTab('panoramica', 'Panoramica', this)">
       <span class="icon">📊</span>
       <span class="label">Panoramica</span>
     </button>
-    <button class="tab-item" onclick="switchTab('settings', 'Impostazioni')">
+    <button class="tab-item" onclick="switchTab('settings', 'Settings', this)">
       <span class="icon">⚙️</span>
       <span class="label">Settings</span>
     </button>
