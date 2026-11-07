@@ -402,12 +402,17 @@ function backupJSON() {
   }, 100);
 }
 
-// Ripristino JSON corretto (senza falsi allarmi)
+// Ripristino JSON flessibile e tollerante per evitare falsi errori
 function restoreJSON(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(e) {
     try {
-      const parsedData = JSON.parse(e.target.result);
+      let parsedData = JSON.parse(e.target.result);
+      
+      if (!Array.isArray(parsedData) && parsedData.books && Array.isArray(parsedData.books)) {
+        parsedData = parsedData.books;
+      }
+
       if (Array.isArray(parsedData)) {
         books = parsedData;
         saveToStorage();
@@ -418,13 +423,25 @@ function restoreJSON(event) {
         
         alert('Ripristino completato con successo!');
       } else {
-        throw new Error('Formato non valido');
+        if (typeof parsedData === 'object' && parsedData !== null) {
+          books = Object.values(parsedData);
+          saveToStorage();
+          renderHome();
+          renderYearsCards();
+          if(typeof closeYearDetails === 'function') closeYearDetails();
+          if(typeof closeOverviewDetail === 'function') closeOverviewDetail();
+          
+          alert('Ripristino completato con successo!');
+        } else {
+          throw new Error('Formato non riconosciuto');
+        }
       }
     } catch(err) {
+      console.error("Errore di parsing JSON:", err);
       alert('Il file di backup selezionato non è valido o è corrotto.');
     }
   };
-  fileReader.readAsText(event.target.files[0]);
+  fileReader.readAsText(event.target.files[0], "UTF-8");
 }
 
 function clearAllData() {
