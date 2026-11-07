@@ -1,5 +1,5 @@
 // ============================================================
-// Tracker Book - app.js (versione corretta)
+// Tracker Book - app.js (versione IndexedDB)
 // ============================================================
 
 const PLACEHOLDER_COVER =
@@ -11,28 +11,175 @@ const PLACEHOLDER_COVER =
     'font-family="sans-serif">Libro</text></svg>'
   );
 
-// Caricamento sicuro da localStorage (non crasha se i dati sono rovinati)
-function loadBooks() {
-  try {
-    const raw = localStorage.getItem('tb_books');
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('Errore lettura localStorage:', err);
-    return [];
-  }
-}
-
-let books = loadBooks();
+// Lista libri tenuta in memoria per il rendering; la fonte
+// permanente dei dati è IndexedDB.
+let books = [];
 let editingId = null;
 let currentOverviewTab = 'authors';
 let currentCoverBase64 = '';
 
-document.addEventListener('DOMContentLoaded', () => {
+// ------------------------------------------------------------
+// IndexedDB
+// ------------------------------------------------------------
+const DB_NAME = 'tracker_book_db';
+const DB_VERSION = 1;
+const STORE = 'books';
+let dbPromise = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) {
+      reject(new Error('IndexedDB non supportato da questo browser'));
+      return;
+    }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error('Apertura database bloccata: chiudi le altre schede dell\'app'));
+  });
+  return dbPromise;
+}
+
+// Esegue una transazione e attende il completamento reale
+async function runTx(mode, work) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, mode);
+    const store = tx.objectStore(STORE);
+    try {
+      work(store);
+    } catch (err) {
+      reject(err);
+      try { tx.abort(); } catch (_) {}
+      return;
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error || new Error('Transazione annullata'));
+  });
+}
+
+async function idbGetAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(STORE, 'readonly').objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function idbPut(book) {
+  return runTx('readwrite', store => { store.put(book); });
+}
+
+function idbDelete(id) {
+  return runTx('readwrite', store => { store.delete(id); });
+}
+
+function idbReplaceAll(list) {
+  return runTx('readwrite', store => {
+    store.clear();
+    list.forEach(b => store.put(b));
+  });
+}
+
+function idbClear() {
+  return runTx('readwrite', store => { store.clear(); });
+}
+
+function showStorageError(err) {
+  console.error('Errore archiviazione:', err);
+  alert('Errore nel salvataggio dei dati (' + (err && err.name ? err.name : 'errore') +
+        '): ' + (err && err.message ? err.message : err));
+}
+
+// ------------------------------------------------------------
+// Normalizzazione di un record libro (usata da migrazione e ripristino)
+// ------------------------------------------------------------
+function normalizeBook(b, i) {
+  let id = Number(b.id);
+  if (!isFinite(id) || id <= 0) id = Date.now() + i;
+  return {
+    id: id,
+    titolo: String(b.titolo || ''),
+    autore: String(b.autore || ''),
+    pagine: Math.round(parseFloat(b.pagine) || 0),
+    anno: String(b.anno || ''),
+    serie: String(b.serie || ''),
+    edizione: String(b.edizione || ''),
+    formato: b.formato === 'Ebook' ? 'Ebook' : 'Cartaceo',
+    dataFine: String(b.dataFine || ''),
+    copertina: b.copertina || PLACEHOLDER_COVER
+  };
+}
+
+function normalizeList(list) {
+  const seen = new Set();
+  const out = [];
+  list
+    .filter(b => b && typeof b === 'object' && b.titolo)
+    .forEach((b, i) => {
+      const nb = normalizeBook(b, i);
+      while (seen.has(nb.id)) nb.id++; // evita ID duplicati
+      seen.add(nb.id);
+      out.push(nb);
+    });
+  return out;
+}
+
+// ------------------------------------------------------------
+// Avvio: apre il DB, migra i vecchi dati da localStorage, disegna UI
+// ------------------------------------------------------------
+async function initApp() {
+  try {
+    await openDB();
+    books = await idbGetAll();
+
+    // Migrazione automatica dal vecchio localStorage
+    const raw = localStorage.getItem('tb_books');
+    if (raw && books.length === 0) {
+      try {
+        const old = JSON.parse(raw);
+        if (Array.isArray(old) && old.length > 0) {
+          const cleaned = normalizeList(old);
+          await idbReplaceAll(cleaned);
+          const check = await idbGetAll();
+          if (check.length === cleaned.length) {
+            books = check;
+            localStorage.removeItem('tb_books'); // libera lo spazio
+            console.log('Migrazione completata:', check.length, 'libri');
+          }
+        }
+      } catch (err) {
+        console.error('Migrazione fallita (dati vecchi mantenuti):', err);
+      }
+    }
+
+    // Chiede al browser di non cancellare i dati automaticamente
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+  } catch (err) {
+    showStorageError(err);
+  }
+
   renderHome();
   renderYearsCards();
   updateDatalists();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 // Registrazione Service Worker Offline
 if ('serviceWorker' in navigator) {
@@ -61,20 +208,6 @@ function encodeArg(str) {
 function dateValue(d) {
   const t = d ? new Date(d).getTime() : 0;
   return isNaN(t) ? 0 : t;
-}
-
-// Salva e restituisce true/false (localStorage può essere pieno)
-function saveToStorage() {
-  try {
-    localStorage.setItem('tb_books', JSON.stringify(books));
-  } catch (err) {
-    console.error('Errore salvataggio localStorage:', err);
-    alert('Impossibile salvare i dati nel browser (' + err.name + '). ' +
-          'La memoria potrebbe essere piena: prova a usare copertine più piccole.');
-    return false;
-  }
-  updateDatalists();
-  return true;
 }
 
 // ------------------------------------------------------------
@@ -114,8 +247,7 @@ function toggleForm() {
 }
 
 // ------------------------------------------------------------
-// Copertina: anteprima + compressione (più leggera per non
-// riempire il localStorage)
+// Copertina: anteprima + compressione
 // ------------------------------------------------------------
 function previewThumbnail(event) {
   const file = event.target.files[0];
@@ -127,22 +259,21 @@ function previewThumbnail(event) {
     img.onload = function () {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const MAX_WIDTH = 220;
-      const MAX_HEIGHT = 330;
-      let width = img.width;
-      let height = img.height;
+      const MAX_WIDTH = 160;
+      const MAX_HEIGHT = 240;
 
-      if (width > height) {
-        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-      } else {
-        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-      }
+      // Ridimensiona mantenendo le proporzioni, senza mai ingrandire
+      const scale = Math.min(MAX_WIDTH / img.width, MAX_HEIGHT / img.height, 1);
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
 
-      canvas.width = Math.round(width);
-      canvas.height = Math.round(height);
+      // Sfondo bianco: evita i bordi neri con PNG trasparenti
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      currentCoverBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      currentCoverBase64 = canvas.toDataURL('image/jpeg', 0.72);
       document.getElementById('cover-preview').src = currentCoverBase64;
       document.getElementById('cover-preview-container').classList.remove('hidden');
     };
@@ -154,7 +285,7 @@ function previewThumbnail(event) {
 // ------------------------------------------------------------
 // Salvataggio libro
 // ------------------------------------------------------------
-document.getElementById('book-form').addEventListener('submit', (e) => {
+document.getElementById('book-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   let coverToSave = currentCoverBase64;
@@ -176,21 +307,18 @@ document.getElementById('book-form').addEventListener('submit', (e) => {
     copertina: coverToSave || PLACEHOLDER_COVER
   };
 
-  const previous = books.slice();
-
-  if (editingId !== null) {
-    const index = books.findIndex(b => b.id == editingId);
-    if (index !== -1) books[index] = bookData;
-    else books.push(bookData);
-  } else {
-    books.push(bookData);
-  }
-
-  if (!saveToStorage()) {
-    books = previous; // annulla se il salvataggio è fallito
+  try {
+    await idbPut(bookData);
+  } catch (err) {
+    showStorageError(err);
     return;
   }
 
+  const index = books.findIndex(b => b.id == bookData.id);
+  if (index !== -1) books[index] = bookData;
+  else books.push(bookData);
+
+  updateDatalists();
   toggleForm();
   renderHome();
   renderYearsCards();
@@ -432,23 +560,29 @@ function editBook(id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function deleteBook(id) {
-  const realId = decodeURIComponent(id);
-  if (confirm('Vuoi rimuovere questo libro dalla libreria?')) {
-    const previous = books.slice();
-    books = books.filter(item => item.id != realId);
-    if (!saveToStorage()) {
-      books = previous;
-      return;
-    }
-    renderHome();
-    renderYearsCards();
-    if (!document.getElementById('year-details').classList.contains('hidden')) {
-      closeYearDetails();
-    }
-    if (!document.getElementById('overview-detail').classList.contains('hidden')) {
-      closeOverviewDetail();
-    }
+async function deleteBook(id) {
+  const target = books.find(item => item.id == decodeURIComponent(id));
+  if (!target) return;
+
+  if (!confirm('Vuoi rimuovere questo libro dalla libreria?')) return;
+
+  try {
+    await idbDelete(target.id);
+  } catch (err) {
+    showStorageError(err);
+    return;
+  }
+
+  books = books.filter(item => item.id !== target.id);
+  updateDatalists();
+  renderHome();
+  renderYearsCards();
+
+  if (!document.getElementById('year-details').classList.contains('hidden')) {
+    closeYearDetails();
+  }
+  if (!document.getElementById('overview-detail').classList.contains('hidden')) {
+    closeOverviewDetail();
   }
 }
 
@@ -511,7 +645,7 @@ function backupJSON() {
 }
 
 // ------------------------------------------------------------
-// Ripristino JSON: errori separati e messaggi reali
+// Ripristino JSON
 // ------------------------------------------------------------
 function restoreJSON(event) {
   const input = event.target;
@@ -525,7 +659,7 @@ function restoreJSON(event) {
     input.value = '';
   };
 
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     // 1) Parsing del file
     let parsed;
     try {
@@ -547,39 +681,27 @@ function restoreJSON(event) {
       return;
     }
 
-    // 2) Normalizzazione dei record
-    const cleaned = parsed
-      .filter(b => b && typeof b === 'object' && b.titolo)
-      .map((b, i) => ({
-        id: b.id || Date.now() + i,
-        titolo: String(b.titolo || ''),
-        autore: String(b.autore || ''),
-        pagine: Math.round(parseFloat(b.pagine) || 0),
-        anno: String(b.anno || ''),
-        serie: String(b.serie || ''),
-        edizione: String(b.edizione || ''),
-        formato: b.formato === 'Ebook' ? 'Ebook' : 'Cartaceo',
-        dataFine: String(b.dataFine || ''),
-        copertina: b.copertina || PLACEHOLDER_COVER
-      }));
-
+    // 2) Normalizzazione
+    const cleaned = normalizeList(parsed);
     if (cleaned.length === 0) {
       alert('Il file non contiene libri validi.');
       input.value = '';
       return;
     }
 
-    // 3) Salvataggio (se fallisce, ripristina lo stato precedente)
-    const previous = books;
-    books = cleaned;
-    if (!saveToStorage()) {
-      books = previous;
+    // 3) Salvataggio in IndexedDB (sostituisce i dati esistenti)
+    try {
+      await idbReplaceAll(cleaned);
+    } catch (err) {
+      showStorageError(err);
       input.value = '';
       return;
     }
+    books = cleaned;
 
-    // 4) Aggiornamento interfaccia (errore separato)
+    // 4) Aggiornamento interfaccia
     try {
+      updateDatalists();
       renderHome();
       renderYearsCards();
       closeYearDetails();
@@ -598,15 +720,22 @@ function restoreJSON(event) {
 // ------------------------------------------------------------
 // Cancella tutto
 // ------------------------------------------------------------
-function clearAllData() {
-  if (confirm('Attenzione: questa azione eliminerà tutti i libri salvati. Vuoi procedere?')) {
-    books = [];
-    if (!saveToStorage()) return;
-    renderHome();
-    renderYearsCards();
-    closeYearDetails();
-    closeOverviewDetail();
-    switchOverviewTab(currentOverviewTab);
-    alert('Tutti i dati sono stati cancellati.');
+async function clearAllData() {
+  if (!confirm('Attenzione: questa azione eliminerà tutti i libri salvati. Vuoi procedere?')) return;
+
+  try {
+    await idbClear();
+  } catch (err) {
+    showStorageError(err);
+    return;
   }
+
+  books = [];
+  updateDatalists();
+  renderHome();
+  renderYearsCards();
+  closeYearDetails();
+  closeOverviewDetail();
+  switchOverviewTab(currentOverviewTab);
+  alert('Tutti i dati sono stati cancellati.');
 }
