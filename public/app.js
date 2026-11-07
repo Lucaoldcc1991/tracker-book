@@ -1,5 +1,5 @@
 // ============================================================
-// Tracker Book - app.js (versione IndexedDB + Timeline Grafica)
+// Tracker Book - app.js (versione IndexedDB)
 // ============================================================
 
 const PLACEHOLDER_COVER =
@@ -23,6 +23,7 @@ let currentCoverBase64 = '';
 // ------------------------------------------------------------
 const DB_NAME = 'tracker_book_db';
 const DB_VERSION = 1;
+const STORE = 'books';
 let dbPromise = null;
 
 function openDB() {
@@ -45,8 +46,6 @@ function openDB() {
   });
   return dbPromise;
 }
-
-const STORE = 'books';
 
 // Esegue una transazione e attende il completamento reale
 async function runTx(mode, work) {
@@ -102,7 +101,7 @@ function showStorageError(err) {
 }
 
 // ------------------------------------------------------------
-// Normalizzazione di un record libro
+// Normalizzazione di un record libro (usata da migrazione e ripristino)
 // ------------------------------------------------------------
 function normalizeBook(b, i) {
   let id = Number(b.id);
@@ -128,7 +127,7 @@ function normalizeList(list) {
     .filter(b => b && typeof b === 'object' && b.titolo)
     .forEach((b, i) => {
       const nb = normalizeBook(b, i);
-      while (seen.has(nb.id)) nb.id++;
+      while (seen.has(nb.id)) nb.id++; // evita ID duplicati
       seen.add(nb.id);
       out.push(nb);
     });
@@ -143,6 +142,7 @@ async function initApp() {
     await openDB();
     books = await idbGetAll();
 
+    // Migrazione automatica dal vecchio localStorage
     const raw = localStorage.getItem('tb_books');
     if (raw && books.length === 0) {
       try {
@@ -153,15 +153,16 @@ async function initApp() {
           const check = await idbGetAll();
           if (check.length === cleaned.length) {
             books = check;
-            localStorage.removeItem('tb_books');
+            localStorage.removeItem('tb_books'); // libera lo spazio
             console.log('Migrazione completata:', check.length, 'libri');
           }
         }
       } catch (err) {
-        console.error('Migrazione fallita:', err);
+        console.error('Migrazione fallita (dati vecchi mantenuti):', err);
       }
     }
 
+    // Chiede al browser di non cancellare i dati automaticamente
     if (navigator.storage && navigator.storage.persist) {
       navigator.storage.persist().catch(() => {});
     }
@@ -180,6 +181,7 @@ if (document.readyState === 'loading') {
   initApp();
 }
 
+// Registrazione Service Worker Offline
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW error:', err));
@@ -198,6 +200,7 @@ function escapeHTML(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Per valori dentro onclick="...('...')": evita che apostrofi rompano l'HTML
 function encodeArg(str) {
   return encodeURIComponent(String(str)).replace(/'/g, '%27');
 }
@@ -244,7 +247,7 @@ function toggleForm() {
 }
 
 // ------------------------------------------------------------
-// Copertina
+// Copertina: anteprima + compressione
 // ------------------------------------------------------------
 function previewThumbnail(event) {
   const file = event.target.files[0];
@@ -259,10 +262,12 @@ function previewThumbnail(event) {
       const MAX_WIDTH = 160;
       const MAX_HEIGHT = 240;
 
+      // Ridimensiona mantenendo le proporzioni, senza mai ingrandire
       const scale = Math.min(MAX_WIDTH / img.width, MAX_HEIGHT / img.height, 1);
       canvas.width = Math.max(1, Math.round(img.width * scale));
       canvas.height = Math.max(1, Math.round(img.height * scale));
 
+      // Sfondo bianco: evita i bordi neri con PNG trasparenti
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingQuality = 'high';
@@ -361,7 +366,7 @@ function renderHome() {
 }
 
 // ------------------------------------------------------------
-// ANNI (Con Timeline Grafica Integrata)
+// ANNI
 // ------------------------------------------------------------
 function renderYearsCards() {
   const container = document.getElementById('years-cards-container');
@@ -382,51 +387,7 @@ function renderYearsCards() {
     return b - a;
   });
 
-  if (years.length === 0) {
-    container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">Nessun libro disponibile.</p>';
-    return;
-  }
-
-  // Calcolo dei massimi per proporzionare le altezze delle barre
-  let maxBooks = 1;
-  let maxPages = 1;
-  years.forEach(y => {
-    if (yearsMap[y].count > maxBooks) maxBooks = yearsMap[y].count;
-    if (yearsMap[y].pages > maxPages) maxPages = yearsMap[y].pages;
-  });
-
-  // Generazione HTML della Timeline Grafica
-  const timelineHTML = `
-    <div class="timeline-container" style="background: var(--card-bg, #ffffff); border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-      <div class="timeline-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: bold; font-size: 15px;">
-        <span>Andamento per Anno</span>
-        <div class="timeline-legend" style="display: flex; gap: 15px; font-size: 13px;">
-          <div class="legend-item" style="display: flex; align-items: center; gap: 5px;"><span class="legend-dot" style="width: 10px; height: 10px; border-radius: 3px; background-color: #3b82f6;"></span> Libri</div>
-          <div class="legend-item" style="display: flex; align-items: center; gap: 5px;"><span class="legend-dot" style="width: 10px; height: 10px; border-radius: 3px; background-color: #10b981;"></span> Pagine</div>
-        </div>
-      </div>
-      <div class="timeline-bars-wrapper" style="display: flex; align-items: flex-end; gap: 12px; height: 160px; overflow-x: auto; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb;">
-        ${years.map(y => {
-          const data = yearsMap[y];
-          const booksHeight = Math.max(8, Math.round((data.count / maxBooks) * 100));
-          const pagesHeight = Math.max(8, Math.round((data.pages / maxPages) * 100));
-
-          return `
-            <div class="timeline-year-group" onclick="openYearDetails('${encodeArg(y)}')" style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 50px; height: 100%; justify-content: flex-end; cursor: pointer;" title="${y}: ${data.count} libri, ${data.pages} pagine">
-              <div class="timeline-bars-pair" style="display: flex; align-items: flex-end; gap: 4px; height: 120px; width: 100%; justify-content: center;">
-                <div class="timeline-bar bar-books" style="width: 14px; background-color: #3b82f6; border-radius: 4px 4px 0 0; height: ${booksHeight}px;" title="${data.count} libri"></div>
-                <div class="timeline-bar bar-pages" style="width: 14px; background-color: #10b981; border-radius: 4px 4px 0 0; height: ${pagesHeight}px;" title="${data.pages} pagine"></div>
-              </div>
-              <div class="timeline-year-label" style="margin-top: 8px; font-size: 12px; color: #6b7280; font-weight: 600; text-align: center;">${escapeHTML(y)}</div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-  `;
-
-  // Generazione delle card classiche sottostanti
-  const cardsHTML = years.map(y => `
+  container.innerHTML = years.map(y => `
     <div class="shelf-tile" onclick="openYearDetails('${encodeArg(y)}')">
       <div class="tile-title">${escapeHTML(y)}</div>
       <div class="tile-count">${yearsMap[y].count} libri (${yearsMap[y].pages.toLocaleString()} pag.)</div>
@@ -437,8 +398,6 @@ function renderYearsCards() {
       </div>
     </div>
   `).join('');
-
-  container.innerHTML = timelineHTML + '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">' + cardsHTML + '</div>';
 }
 
 function openYearDetails(encodedYear) {
@@ -638,6 +597,34 @@ function updateDatalists() {
 }
 
 // ------------------------------------------------------------
+// Export (CSV / altri formati via API)
+// ------------------------------------------------------------
+async function exportData(type) {
+  try {
+    const res = await fetch(`/api/export/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ books })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `libri_letti.${type}`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  } catch (err) {
+    console.error('Errore export:', err);
+    alert('Esportazione non riuscita: ' + err.message);
+  }
+}
+
+// ------------------------------------------------------------
 // Backup JSON
 // ------------------------------------------------------------
 function backupJSON() {
@@ -673,6 +660,7 @@ function restoreJSON(event) {
   };
 
   reader.onload = async function (e) {
+    // 1) Parsing del file
     let parsed;
     try {
       parsed = JSON.parse(e.target.result);
@@ -683,6 +671,7 @@ function restoreJSON(event) {
       return;
     }
 
+    // Accetta sia [..] sia { books: [..] }
     if (!Array.isArray(parsed) && parsed && Array.isArray(parsed.books)) {
       parsed = parsed.books;
     }
@@ -692,6 +681,7 @@ function restoreJSON(event) {
       return;
     }
 
+    // 2) Normalizzazione
     const cleaned = normalizeList(parsed);
     if (cleaned.length === 0) {
       alert('Il file non contiene libri validi.');
@@ -699,6 +689,7 @@ function restoreJSON(event) {
       return;
     }
 
+    // 3) Salvataggio in IndexedDB (sostituisce i dati esistenti)
     try {
       await idbReplaceAll(cleaned);
     } catch (err) {
@@ -708,6 +699,7 @@ function restoreJSON(event) {
     }
     books = cleaned;
 
+    // 4) Aggiornamento interfaccia
     try {
       updateDatalists();
       renderHome();
