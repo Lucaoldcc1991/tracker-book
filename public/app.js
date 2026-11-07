@@ -1,5 +1,5 @@
 let books = JSON.parse(localStorage.getItem('tb_books')) || [];
-let editingId = null; // Usiamo l'ID univoco per garantire la modifica perfetta anche nel 2023/2024
+let editingId = null; 
 let currentOverviewTab = 'authors';
 let currentCoverBase64 = '';
 
@@ -89,13 +89,13 @@ function previewThumbnail(event) {
   }
 }
 
-// Salvataggio Libro con supporto ID univoco per evitare bug di modifica anni passati
+// Salvataggio Libro con supporto ID univoco
 document.getElementById('book-form').addEventListener('submit', (e) => {
   e.preventDefault();
   
   let coverToSave = currentCoverBase64;
   if (!coverToSave && editingId !== null) {
-    const existingBook = books.find(b => b.id === editingId);
+    const existingBook = books.find(b => b.id == editingId);
     if (existingBook) coverToSave = existingBook.copertina;
   }
 
@@ -113,7 +113,7 @@ document.getElementById('book-form').addEventListener('submit', (e) => {
   };
 
   if(editingId !== null) {
-    const index = books.findIndex(b => b.id === editingId);
+    const index = books.findIndex(b => b.id == editingId);
     if(index !== -1) {
       books[index] = bookData;
     } else {
@@ -159,7 +159,6 @@ function renderHome() {
   document.getElementById('stat-year-cartaceo').innerText = `📖 ${yearCartaceo} cartacei`;
   document.getElementById('stat-year-ebook').innerText = `📱 ${yearEbook} ebook`;
 
-  // Filtra solo le letture dell'anno corrente e ordinali con l'ultimo letto in cima
   const currentYearBooks = books
     .filter(b => b.dataFine && b.dataFine.startsWith(currentYear))
     .sort((a,b) => new Date(b.dataFine) - new Date(a.dataFine));
@@ -234,7 +233,7 @@ function switchOverviewTab(type) {
     }
     if(type === 'series') {
       key = b.serie ? b.serie.trim() : '';
-      if(!key) return; // Salta completamente se non ha serie/tag
+      if(!key) return;
     }
     if(type === 'formats') {
       if(b.formato === 'Cartaceo') key = '📖 Cartaceo';
@@ -284,7 +283,7 @@ function closeOverviewDetail() {
   document.getElementById('overview-grid').classList.remove('hidden');
 }
 
-// Scheda libro con etichetta Serie/Tag aggiornata
+// Scheda libro
 function renderBookCardHTML(b, showActions = false) {
   let formattedDate = 'N/D';
   if(b.dataFine) {
@@ -317,7 +316,6 @@ function renderBookCardHTML(b, showActions = false) {
 
 // Modifica con scroll automatico in alto
 function editBook(id) {
-  // Converte l'ID in numero o stringa a seconda di come è memorizzato
   const bookToEdit = books.find(item => item.id == id);
   if(!bookToEdit) return;
 
@@ -348,7 +346,6 @@ function editBook(id) {
   switchTab('libri', 'Libreria', '📚', document.querySelectorAll('.tab-item')[1]);
   document.getElementById('book-form').classList.remove('hidden');
   
-  // Riporta la schermata in cima automaticamente
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -405,17 +402,26 @@ function backupJSON() {
   }, 100);
 }
 
+// Ripristino JSON corretto (senza falsi allarmi)
 function restoreJSON(event) {
   const fileReader = new FileReader();
   fileReader.onload = function(e) {
     try {
-      books = JSON.parse(e.target.result);
-      saveToStorage();
-      alert('Ripristino completato con successo!');
-      renderHome();
-      renderYearsCards();
+      const parsedData = JSON.parse(e.target.result);
+      if (Array.isArray(parsedData)) {
+        books = parsedData;
+        saveToStorage();
+        renderHome();
+        renderYearsCards();
+        if(typeof closeYearDetails === 'function') closeYearDetails();
+        if(typeof closeOverviewDetail === 'function') closeOverviewDetail();
+        
+        alert('Ripristino completato con successo!');
+      } else {
+        throw new Error('Formato non valido');
+      }
     } catch(err) {
-      alert('File di backup non valido!');
+      alert('Il file di backup selezionato non è valido o è corrotto.');
     }
   };
   fileReader.readAsText(event.target.files[0]);
