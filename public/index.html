@@ -58,7 +58,7 @@
         </div>
       </div>
 
-      <div class="section-title-badge" style="margin-top: 24px;">Ultime Letture</div>
+      <div class="section-title-badge" style="margin-top: 24px;">Ultime Letture Anno Corrente</div>
       <div id="home-book-list" class="book-list"></div>
     </section>
 
@@ -75,7 +75,6 @@
         <div class="input-group">
           <label>Copertina (Scegli dalla galleria)</label>
           <div class="file-input-wrapper">
-            <!-- SENZA CAPTURE: Apre direttamente la galleria del telefono -->
             <input type="file" id="inp-cover" accept="image/*" onchange="previewThumbnail(event)">
           </div>
           <div id="cover-preview-container" class="hidden" style="margin-top:10px;">
@@ -93,7 +92,7 @@
             <input type="number" id="inp-year" placeholder="Anno pubbl.">
           </div>
           
-          <input type="text" id="inp-serie" placeholder="Serie / Argomento" list="list-series">
+          <input type="text" id="inp-serie" placeholder="Serie / Tag" list="list-series">
           <datalist id="list-series"></datalist>
 
           <input type="text" id="inp-edition" placeholder="Edizione / Casa Editrice">
@@ -133,7 +132,7 @@
     <section id="sec-panoramica" class="tab-content">
       <div class="pill-segmented-control mb-20">
         <button id="btn-ov-authors" class="pill-segment active" onclick="switchOverviewTab('authors')">Autori</button>
-        <button id="btn-ov-series" class="pill-segment" onclick="switchOverviewTab('series')">Serie / Argomenti</button>
+        <button id="btn-ov-series" class="pill-segment" onclick="switchOverviewTab('series')">Serie / Tag</button>
         <button id="btn-ov-formats" class="pill-segment" onclick="switchOverviewTab('formats')">Formato</button>
       </div>
 
